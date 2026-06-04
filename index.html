@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Generate unlimited printable Functional Skills Maths Level 1 worksheets and answer sheets.">
+  <title>MathsMint | Functional Skills Worksheet Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#" aria-label="MathsMint home">
+      <span class="brand-mark">M</span>
+      <span>
+        <strong>MathsMint</strong>
+        <small>Functional Skills practice</small>
+      </span>
+    </a>
+    <div class="header-badge"><span></span> Level 1 worksheet studio</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">Fresh practice, every time</p>
+        <h1>Build a maths worksheet<br><em>in a few clicks.</em></h1>
+        <p class="hero-copy">Create unique, real-world Functional Skills Maths questions with automatic answers and clear worked solutions.</p>
+      </div>
+      <div class="hero-stat">
+        <strong id="template-count">30+</strong>
+        <span>carefully structured<br>question templates</span>
+      </div>
+    </section>
+
+    <section class="studio">
+      <aside class="controls-panel">
+        <div class="panel-heading">
+          <span class="step-number">1</span>
+          <div>
+            <p class="kicker">Set up your worksheet</p>
+            <h2>Choose the practice</h2>
+          </div>
+        </div>
+
+        <form id="generator-form">
+          <label class="field">
+            <span>Level</span>
+            <select id="level">
+              <option>Level 1</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Topic</span>
+            <select id="topic"></select>
+          </label>
+
+          <fieldset class="field">
+            <legend>Difficulty</legend>
+            <div class="segmented">
+              <input type="radio" name="difficulty" id="easy" value="Easy">
+              <label for="easy">Easy</label>
+              <input type="radio" name="difficulty" id="medium" value="Medium" checked>
+              <label for="medium">Medium</label>
+              <input type="radio" name="difficulty" id="hard" value="Hard">
+              <label for="hard">Hard</label>
+            </div>
+          </fieldset>
+
+          <fieldset class="field">
+            <legend>Calculator use</legend>
+            <div class="segmented calculator-options">
+              <input type="radio" name="calculator-mode" id="calc-mixed" value="Mixed" checked>
+              <label for="calc-mixed">Mixed</label>
+              <input type="radio" name="calculator-mode" id="no-calculator" value="No calculator">
+              <label for="no-calculator">No calculator</label>
+              <input type="radio" name="calculator-mode" id="calculator" value="Calculator">
+              <label for="calculator">Calculator</label>
+            </div>
+            <small class="field-help">Question values and styles adapt to the selected mode.</small>
+          </fieldset>
+
+          <label class="field range-field">
+            <span>Number of questions <output id="question-count-output">10</output></span>
+            <input id="question-count" type="range" min="5" max="25" step="1" value="10">
+            <small><span>5</span><span>25</span></small>
+          </label>
+
+          <label class="switch-row">
+            <span>
+              <strong>Include answer sheet</strong>
+              <small>With full worked solutions</small>
+            </span>
+            <input id="include-answers" type="checkbox" checked>
+            <i aria-hidden="true"></i>
+          </label>
+
+          <button class="generate-button" type="submit">
+            <span>Generate worksheet</span>
+            <b aria-hidden="true">→</b>
+          </button>
+        </form>
+
+        <div class="trust-note">
+          <span>✓</span>
+          <p><strong>Reliable by design</strong>Answers are calculated from structured maths templates, never guessed.</p>
+        </div>
+      </aside>
+
+      <section class="preview-panel">
+        <div class="preview-toolbar">
+          <div class="panel-heading compact">
+            <span class="step-number">2</span>
+            <div>
+              <p class="kicker">Ready to print</p>
+              <h2>Your worksheet</h2>
+            </div>
+          </div>
+          <div class="view-tabs" role="tablist">
+            <button class="active" type="button" data-view="worksheet">Worksheet</button>
+            <button type="button" data-view="answers">Answers</button>
+          </div>
+        </div>
+
+        <div class="paper-stage">
+          <article id="paper-preview" class="paper" aria-live="polite"></article>
+        </div>
+
+        <div class="download-bar">
+          <div>
+            <strong id="ready-label">Worksheet ready</strong>
+            <span id="ready-detail">10 questions · Level 1 · Medium</span>
+          </div>
+          <div class="download-actions">
+            <button id="print-worksheet" type="button" class="secondary-button">Print worksheet</button>
+            <button id="print-answers" type="button" class="primary-button">Print answers</button>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="topic-strip">
+      <p class="eyebrow">Built for Functional Skills</p>
+      <h2>Practical maths. Familiar contexts.<br>Confidence that sticks.</h2>
+      <div class="feature-grid">
+        <article><span>£</span><h3>Real-world questions</h3><p>Shopping, work, travel, bills and everyday decisions.</p></article>
+        <article><span>∞</span><h3>Unlimited practice</h3><p>New values and wording each time you generate.</p></article>
+        <article><span>✓</span><h3>Worked solutions</h3><p>Clear steps help learners understand, not just check.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><strong>MathsMint</strong><span>Made for learning, built for practice.</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
