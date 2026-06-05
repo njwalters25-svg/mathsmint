@@ -284,6 +284,7 @@ const calculatorKeys = new Set([
   "volume", "mixedWeights", "compareServices", "journeyFormula", "proportionReliability"
 ]);
 const variedFormatKeys = ["fractionConversionTable", "salesTable", "mixedWeights", "compareServices", "journeyFormula", "probabilityParts", "proportionReliability"];
+const groupMixedPrefix = "mixed-group:";
 
 const state = { questions: [], topicKey: "mixed", difficulty: "Medium", calculatorMode: "Mixed", view: "worksheet" };
 const els = {
@@ -298,6 +299,23 @@ function topicSupports(key, mode) {
   if (mode === "Mixed") return true;
   if (mode === "No calculator") return noCalculatorKeys.has(key);
   return true;
+}
+
+function isGroupMixedKey(key) {
+  return key.startsWith(groupMixedPrefix);
+}
+
+function groupFromMixedKey(key) {
+  return key.slice(groupMixedPrefix.length);
+}
+
+function optionSupports(value, mode) {
+  if (value === "mixed") return true;
+  if (isGroupMixedKey(value)) {
+    const group = groupFromMixedKey(value);
+    return Object.keys(topics).some(key => topics[key].group === group && topicSupports(key, mode));
+  }
+  return topicSupports(value, mode);
 }
 
 function effectiveDifficulty(difficulty, calculatorMode) {
@@ -335,6 +353,7 @@ function fillTopics() {
   const mixedGroup = document.createElement("optgroup");
   mixedGroup.label = "Mixed practice";
   mixedGroup.append(new Option("Mixed topics", "mixed"));
+  Object.keys(groups).forEach(group => mixedGroup.append(new Option(`Mixed ${group} topics`, `${groupMixedPrefix}${group}`)));
   els.topic.append(mixedGroup);
   Object.entries(groups).forEach(([group, items]) => {
     const optgroup = document.createElement("optgroup");
@@ -349,7 +368,7 @@ function fillTopics() {
 function updateTopicAvailability() {
   const mode = document.querySelector("input[name=calculator-mode]:checked").value;
   [...els.topic.options].forEach(option => {
-    option.disabled = option.value !== "mixed" && !topicSupports(option.value, mode);
+    option.disabled = !optionSupports(option.value, mode);
   });
   if (els.topic.selectedOptions[0]?.disabled) els.topic.value = "mixed";
 }
@@ -359,10 +378,12 @@ function generate() {
   state.difficulty = document.querySelector("input[name=difficulty]:checked").value;
   state.calculatorMode = document.querySelector("input[name=calculator-mode]:checked").value;
   const total = Number(els.count.value);
-  if (state.topicKey === "mixed") {
-    const eligibleVariedKeys = variedFormatKeys.filter(key => topicSupports(key, state.calculatorMode));
-    const variedFormatStart = randInt(0, eligibleVariedKeys.length - 1);
-    const topicKeys = Object.keys(topics).filter(key => !variedFormatKeys.includes(key) && topicSupports(key, state.calculatorMode));
+  if (state.topicKey === "mixed" || isGroupMixedKey(state.topicKey)) {
+    const selectedGroup = isGroupMixedKey(state.topicKey) ? groupFromMixedKey(state.topicKey) : null;
+    const belongsToSelectedGroup = key => !selectedGroup || topics[key].group === selectedGroup;
+    const eligibleVariedKeys = variedFormatKeys.filter(key => belongsToSelectedGroup(key) && topicSupports(key, state.calculatorMode));
+    const variedFormatStart = eligibleVariedKeys.length ? randInt(0, eligibleVariedKeys.length - 1) : 0;
+    const topicKeys = Object.keys(topics).filter(key => belongsToSelectedGroup(key) && !variedFormatKeys.includes(key) && topicSupports(key, state.calculatorMode));
     const groupBuckets = Object.entries(topicKeys.reduce((groups, key) => {
       (groups[topics[key].group] ||= []).push(key);
       return groups;
@@ -384,10 +405,10 @@ function generate() {
 }
 
 function sheetHeader(answerSheet = false) {
-  const topic = state.topicKey === "mixed" ? "Mixed topics" : topics[state.topicKey].label;
+  const topic = state.topicKey === "mixed" ? "Mixed topics" : isGroupMixedKey(state.topicKey) ? `Mixed ${groupFromMixedKey(state.topicKey)} topics` : topics[state.topicKey].label;
   const totalMarks = state.questions.reduce((sum, item) => sum + item.marks, 0);
   return `<div class="sheet-topline"><span class="sheet-brand">MathsMint</span><span class="sheet-level">Functional Skills · Level 1</span></div>
-    <h1 class="sheet-title">${answerSheet ? "Answer sheet" : state.topicKey === "mixed" ? "Level 1 practice paper" : topic}</h1>
+    <h1 class="sheet-title">${answerSheet ? "Answer sheet" : (state.topicKey === "mixed" || isGroupMixedKey(state.topicKey)) ? "Level 1 practice paper" : topic}</h1>
     <p class="sheet-subtitle">${topic} · ${state.difficulty} · ${state.calculatorMode} · ${state.questions.length} questions · ${totalMarks} marks</p>
     ${answerSheet ? "" : `<div class="student-details"><span>Name:</span><span>Date:</span></div><p class="sheet-instructions"><strong>${state.calculatorMode === "No calculator" ? "Do not use a calculator." : state.calculatorMode === "Calculator" ? "A calculator may be used." : "Check each question to see whether a calculator may be used."}</strong> Show your working in the space provided and remember to include units where needed.</p>`}`;
 }
