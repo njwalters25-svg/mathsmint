@@ -129,6 +129,9 @@ fieldset.field { border: 0; margin-inline: 0; padding: 0; }
 .question-row p { margin: 4px 0 0; font-size: 14px; line-height: 1.65; }
 .question-number { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: white; font-size: 13px; font-weight: bold; }
 .question-topic { color: var(--mint-dark); font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: .09em; }
+.fraction { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; min-width: 1.15em; margin: 0 .08em; line-height: 1; vertical-align: middle; font-size: .88em; }
+.fraction span:first-child { width: 100%; padding: 0 .16em .08em; border-bottom: 1px solid currentColor; text-align: center; }
+.fraction span:last-child { padding-top: .08em; text-align: center; }
 .question-meta { display: grid; gap: 5px; justify-items: end; }
 .marks, .calculator-tag { padding: 4px 7px; border-radius: 4px; background: #f0f2ef; color: #5d6d67; font-size: 9px; font-weight: bold; white-space: nowrap; }
 .calculator-tag { background: #e5f3ee; color: var(--mint-dark); }

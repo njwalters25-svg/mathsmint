@@ -9,6 +9,24 @@ const difficultyScale = { Easy: 1, Medium: 2, Hard: 3 };
 const contextNames = ["Aisha", "Ben", "Chloe", "Darius", "Ella", "Farah", "Grace", "Harvey", "Imani", "Jay"];
 const styleAt = (styles, index) => styles[index % styles.length];
 
+function formatClock(totalMinutes) {
+  const minutesInDay = 24 * 60;
+  const wrapped = ((Math.round(totalMinutes) % minutesInDay) + minutesInDay) % minutesInDay;
+  const hours24 = Math.floor(wrapped / 60);
+  const minutes = wrapped % 60;
+  const suffix = hours24 < 12 ? "am" : "pm";
+  const hours12 = hours24 % 12 || 12;
+  return `${hours12}:${String(minutes).padStart(2, "0")} ${suffix}`;
+}
+
+function formatFractions(value) {
+  return String(value).replace(/\b(\d{1,3})\/(\d{1,3})\b/g, `<span class="fraction"><span>$1</span><span>$2</span></span>`);
+}
+
+function formatText(value) {
+  return formatFractions(value);
+}
+
 function question(text, answer, solution, extras = {}) {
   return { text, answer: String(answer), solution, marks: 2, responseSize: "medium", ...extras };
 }
@@ -180,7 +198,8 @@ const topics = {
   time: { group: "Time", label: "Duration & clocks", make: (d, index = 0) => {
     const startH=randInt(7,16), startM=pick([0,10,15,20,30,45]), duration=randInt(2,[8,18,30][difficultyScale[d]-1])*15, total=startH*60+startM+duration, endH=Math.floor(total/60)%24,endM=total%60;
     const activity = styleAt(["course", "film", "train journey", "workshop", "sports session"], index);
-    return question(`A ${activity} starts at ${String(startH).padStart(2,"0")}:${String(startM).padStart(2,"0")} and lasts ${duration} minutes. What time does it finish?`, `${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}`, `Add ${duration} minutes to ${String(startH).padStart(2,"0")}:${String(startM).padStart(2,"0")}. The finish time is ${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}.`, { styleId: `time-${index % 5}` });
+    const startTime = formatClock(startH * 60 + startM), finishTime = formatClock(total);
+    return question(`A ${activity} starts at ${startTime} and lasts ${duration} minutes. What time does it finish?`, finishTime, `Add ${duration} minutes to ${startTime}. The finish time is ${finishTime}.`, { styleId: `time-${index % 5}` });
   }},
   conversions: { group: "Measures", label: "Metric conversions", make: d => {
     const type=pick(["length","weight","capacity"]), units={length:["m","cm",100],weight:["kg","g",1000],capacity:["litres","ml",1000]}[type], value=randInt(2,[10,25,50][difficultyScale[d]-1]);
@@ -252,7 +271,8 @@ const topics = {
   }},
   journeyFormula: { group: "Time", label: "Formula and journey time", make: d => {
     const distance=randInt(4,[10,20,35][difficultyScale[d]-1])*10, speed=pick([30,40,50,60]), stops=randInt(1,4), stopMinutes=pick([10,15,20]), travelMinutes=distance/speed*60, startH=randInt(7,12), total=startH*60+travelMinutes+stops*stopMinutes, endH=Math.floor(total/60), endM=total%60;
-    return question(`A delivery driver travels ${distance} miles at an average speed of ${speed} mph and makes ${stops} stops of ${stopMinutes} minutes each. The driver leaves at ${startH}:00. What time will the driver finish?`, `${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}`, `Travel time = ${distance} ÷ ${speed} = ${distance/speed} hours (${travelMinutes} minutes). Stops take ${stops} × ${stopMinutes} = ${stops*stopMinutes} minutes. Total time = ${travelMinutes+stops*stopMinutes} minutes, so the finish time is ${String(endH).padStart(2,"0")}:${String(endM).padStart(2,"0")}.`, {
+    const startTime = formatClock(startH * 60), finishTime = formatClock(total);
+    return question(`A delivery driver travels ${distance} miles at an average speed of ${speed} mph and makes ${stops} stops of ${stopMinutes} minutes each. The driver leaves at ${startTime}. What time will the driver finish?`, finishTime, `Travel time = ${distance} ÷ ${speed} = ${distance/speed} hours (${travelMinutes} minutes). Stops take ${stops} × ${stopMinutes} = ${stops*stopMinutes} minutes. Total time = ${travelMinutes+stops*stopMinutes} minutes, so the finish time is ${finishTime}.`, {
       marks: 5, responseSize: "large", visual: `<div class="formula-box"><strong>Use the formula</strong><span>time = distance ÷ average speed</span></div>`
     });
   }},
@@ -414,7 +434,7 @@ function sheetHeader(answerSheet = false) {
 }
 
 function questionBody(q) {
-  return `${q.visual || ""}${q.parts ? `<div class="question-parts">${q.parts.map(part => `<p>${part}</p>`).join("")}</div>` : ""}`;
+  return `${q.visual ? formatText(q.visual) : ""}${q.parts ? `<div class="question-parts">${q.parts.map(part => `<p>${formatText(part)}</p>`).join("")}</div>` : ""}`;
 }
 
 function answerLines(q) {
@@ -425,8 +445,8 @@ function answerLines(q) {
 function render() {
   const answers = state.view === "answers";
   els.paper.innerHTML = sheetHeader(answers) + (answers
-    ? state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${q.text}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<p class="answer"><strong>Answer</strong>${q.answer}</p><p class="solution"><strong>How to work it out</strong>${q.solution}</p></section>`).join("")
-    : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${q.text}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
+    ? state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${formatText(q.text)}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<p class="answer"><strong>Answer</strong>${formatText(q.answer)}</p><p class="solution"><strong>How to work it out</strong>${formatText(q.solution)}</p></section>`).join("")
+    : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
   els.detail.textContent = `${state.questions.length} questions · ${state.questions.reduce((sum, item) => sum + item.marks, 0)} marks · ${state.calculatorMode} · ${state.difficulty}`;
   els.printAnswers.hidden = !els.includeAnswers.checked;
 }
