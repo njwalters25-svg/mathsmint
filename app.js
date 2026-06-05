@@ -373,11 +373,11 @@ function fillTopics() {
   const mixedGroup = document.createElement("optgroup");
   mixedGroup.label = "Mixed practice";
   mixedGroup.append(new Option("Mixed topics", "mixed"));
-  Object.keys(groups).forEach(group => mixedGroup.append(new Option(`Mixed ${group} topics`, `${groupMixedPrefix}${group}`)));
   els.topic.append(mixedGroup);
   Object.entries(groups).forEach(([group, items]) => {
     const optgroup = document.createElement("optgroup");
     optgroup.label = group;
+    optgroup.append(new Option("Mixed topics", `${groupMixedPrefix}${group}`));
     items.forEach(([key, item]) => optgroup.append(new Option(item.label, key)));
     els.topic.append(optgroup);
   });
