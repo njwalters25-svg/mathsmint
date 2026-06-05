@@ -417,11 +417,16 @@ function questionBody(q) {
   return `${q.visual || ""}${q.parts ? `<div class="question-parts">${q.parts.map(part => `<p>${part}</p>`).join("")}</div>` : ""}`;
 }
 
+function answerLines(q) {
+  if (!q.parts?.length) return `<div class="answer-line">Answer</div>`;
+  return `<div class="part-answer-lines">${q.parts.map((_, index) => `<div class="answer-line">Answer ${String.fromCharCode(97 + index)})</div>`).join("")}</div>`;
+}
+
 function render() {
   const answers = state.view === "answers";
   els.paper.innerHTML = sheetHeader(answers) + (answers
     ? state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${q.text}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<p class="answer"><strong>Answer</strong>${q.answer}</p><p class="solution"><strong>How to work it out</strong>${q.solution}</p></section>`).join("")
-    : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${q.text}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div><div class="answer-line">Answer</div></div></section>`).join(""));
+    : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${q.text}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
   els.detail.textContent = `${state.questions.length} questions · ${state.questions.reduce((sum, item) => sum + item.marks, 0)} marks · ${state.calculatorMode} · ${state.difficulty}`;
   els.printAnswers.hidden = !els.includeAnswers.checked;
 }

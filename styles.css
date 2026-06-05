@@ -139,6 +139,7 @@ fieldset.field { border: 0; margin-inline: 0; padding: 0; }
 .working-area.small .working-lines { height: 44px; }
 .working-area.large .working-lines { height: 132px; }
 .answer-line { margin-top: 12px; padding: 7px 0; border-bottom: 1.5px solid #879690; color: #5d6d67; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em; }
+.part-answer-lines { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .question-parts { margin: 15px 0 0 47px; }
 .question-parts p { margin: 8px 0; font-size: 13px; line-height: 1.55; }
 .data-table { width: calc(100% - 47px); margin: 16px 0 0 47px; border-collapse: collapse; table-layout: fixed; font-size: 11px; }
