@@ -8,6 +8,8 @@ const simplify = (n, d) => `${n / gcd(n, d)}/${d / gcd(n, d)}`;
 const difficultyScale = { Easy: 1, Medium: 2, Hard: 3 };
 const contextNames = ["Aisha", "Ben", "Chloe", "Darius", "Ella", "Farah", "Grace", "Harvey", "Imani", "Jay"];
 const styleAt = (styles, index) => styles[index % styles.length];
+const numberWordsOnes = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
+const numberWordsTens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
 
 function formatClock(totalMinutes) {
   const minutesInDay = 24 * 60;
@@ -25,6 +27,24 @@ function formatFractions(value) {
 
 function formatText(value) {
   return formatFractions(value);
+}
+
+function underThousandToWords(number) {
+  const hundred = Math.floor(number / 100);
+  const remainder = number % 100;
+  const words = [];
+  if (hundred) words.push(`${numberWordsOnes[hundred]} hundred`);
+  if (remainder) {
+    if (remainder < 20) words.push(numberWordsOnes[remainder]);
+    else words.push(`${numberWordsTens[Math.floor(remainder / 10)]}${remainder % 10 ? ` ${numberWordsOnes[remainder % 10]}` : ""}`);
+  }
+  return words.join(" ");
+}
+
+function numberToWords(number) {
+  const thousands = Math.floor(number / 1000);
+  const rest = number % 1000;
+  return `${underThousandToWords(thousands)} thousand${rest ? `, ${underThousandToWords(rest)}` : ""}`;
 }
 
 function question(text, answer, solution, extras = {}) {
@@ -123,6 +143,14 @@ const topics = {
     const place = [10, 100, 1000][difficultyScale[d] - 1], n = randInt(place, place * 20), ans = Math.round(n / place) * place;
     return question(`Round ${n.toLocaleString()} to the nearest ${place.toLocaleString()}.`, ans.toLocaleString(), `${n.toLocaleString()} lies closest to ${ans.toLocaleString()} when rounded to the nearest ${place.toLocaleString()}.`);
   }},
+  orderOperations: { group: "Number", label: "Order of operations", make: d => {
+    const a = randInt(20, [60, 90, 140][difficultyScale[d] - 1]), b = randInt(4, 18), c = pick([2, 3, 4, 6]), dValue = randInt(2, 8), answer = a + b * dValue - c * dValue;
+    return question(`${a} + ${b} × ${dValue} - (${c} × ${dValue}) =`, answer, `Calculate the multiplications first: ${b} × ${dValue} = ${b*dValue} and ${c} × ${dValue} = ${c*dValue}. Then ${a} + ${b*dValue} - ${c*dValue} = ${answer}.`, { marks: 2, styleId: "order-operations" });
+  }},
+  wordToFigures: { group: "Number", label: "Words and figures", make: d => {
+    const number = randInt(120, [250, 650, 950][difficultyScale[d] - 1]) * 1000 + randInt(100, 999);
+    return question(`Write the following number using figures: ${numberToWords(number)}.`, number.toLocaleString(), `${numberToWords(number)} is written as ${number.toLocaleString()}.`, { marks: 1, responseSize: "small", styleId: "word-to-figures" });
+  }},
   simplifyFractions: { group: "Fractions", label: "Simplifying fractions", make: d => {
     const baseD = randInt(3, [8, 12, 18][difficultyScale[d] - 1]), baseN = randInt(1, baseD - 1), factor = randInt(2, 8), n = baseN * factor, den = baseD * factor;
     return question(`Write ${n}/${den} in its simplest form.`, simplify(n, den), `The highest common factor is ${gcd(n, den)}. Divide top and bottom by ${gcd(n, den)}: ${n}/${den} = ${simplify(n, den)}.`);
@@ -187,6 +215,31 @@ const topics = {
     const rent = randInt(5, 15) * 20, food = randInt(3, 10) * 20, travel = randInt(2, 8) * 20, left = randInt(2, [8, 18, 30][difficultyScale[d] - 1]) * 20, income = rent + food + travel + left;
     return question(`A household has ${money(income)} available. It budgets ${money(rent)} for rent, ${money(food)} for food and ${money(travel)} for travel. How much remains?`, money(left), `Total spending = ${money(rent)} + ${money(food)} + ${money(travel)} = ${money(rent+food+travel)}. Remaining = ${money(income)} − ${money(rent+food+travel)} = ${money(left)}.`, { quality: { nonNegative: true, value: left } });
   }},
+  subscriptionCompare: { group: "Money", label: "Contract comparison", make: d => {
+    const currentMonthly = tidy(randStep(2500, [4500, 6500, 9000][difficultyScale[d]-1], 50) / 100);
+    const joiningFee = randStep(1500, [4000, 7000, 10000][difficultyScale[d]-1], 500) / 100;
+    const newMonthly = tidy(Math.max(15, currentMonthly - randStep(200, 900, 50) / 100));
+    const months = 12;
+    const currentTotal = currentMonthly * months;
+    const newTotal = joiningFee + newMonthly * months;
+    const saving = tidy(currentTotal - newTotal);
+    return question(`${pick(contextNames)} currently pays ${money(currentMonthly)} per month for a subscription. A new company charges a joining fee of ${money(joiningFee)} plus ${money(newMonthly)} per month for a minimum contract of 1 year. Will changing company save money? Explain your answer.`, `${saving > 0 ? "Yes" : "No"}; ${saving > 0 ? `saves ${money(saving)}` : `costs ${money(Math.abs(saving))} more`}`, `Current yearly cost = 12 × ${money(currentMonthly)} = ${money(currentTotal)}. New yearly cost = ${money(joiningFee)} + 12 × ${money(newMonthly)} = ${money(newTotal)}. Difference = ${money(Math.abs(saving))}.`, {
+      marks: 3,
+      responseSize: "large",
+      parts: ["Calculate the current yearly cost.", "Calculate the new yearly cost.", "State whether changing saves money."]
+    });
+  }},
+  sharedBillCheck: { group: "Money", label: "Shared bill check", make: d => {
+    const people = randInt(3, [5, 8, 12][difficultyScale[d]-1]);
+    const share = tidy(randStep(1200, [3500, 5500, 7500][difficultyScale[d]-1], 25) / 100);
+    const bill = tidy(people * share);
+    const suggested = tidy(share + pick([-1, 0, 1]) * randStep(25, 150, 25) / 100);
+    const correct = suggested === share;
+    return question(`${people} friends share a restaurant bill of ${money(bill)} equally. One person thinks each friend should pay ${money(suggested)}. Is this correct?`, `${correct ? "Yes" : "No"}; each should pay ${money(share)}`, `${money(bill)} ÷ ${people} = ${money(share)}. Compare this with ${money(suggested)}.`, {
+      marks: 3,
+      responseSize: "medium"
+    });
+  }},
   bestBuys: { group: "Money", label: "Best buys", make: () => {
     const qtyA = pick([4,5,6]), priceA = tidy(randInt(350, 850)/100), qtyB = qtyA+pick([2,3,4]), priceB = tidy(randInt(Math.ceil(priceA*100), Math.ceil(priceA*180))/100), unitA=priceA/qtyA, unitB=priceB/qtyB;
     return question(`Pack A contains ${qtyA} items for ${money(priceA)}. Pack B contains ${qtyB} items for ${money(priceB)}. Which is the better buy?`, unitA < unitB ? "Pack A" : "Pack B", `Pack A: ${money(priceA)} ÷ ${qtyA} = ${money(unitA)} each. Pack B: ${money(priceB)} ÷ ${qtyB} = ${money(unitB)} each. ${unitA < unitB ? "Pack A" : "Pack B"} has the lower unit price.`);
@@ -194,6 +247,17 @@ const topics = {
   profit: { group: "Money", label: "Profit & loss", make: d => {
     const cost = randInt(5, [20, 50, 100][difficultyScale[d]-1])*5, selling = cost + randInt(-Math.floor(cost/4), Math.floor(cost/2)), diff=selling-cost;
     return question(`A trader buys an item for ${money(cost)} and sells it for ${money(selling)}. State the profit or loss.`, `${diff >= 0 ? "Profit" : "Loss"} of ${money(Math.abs(diff))}`, `${money(selling)} − ${money(cost)} = ${money(diff)}. This is a ${diff >= 0 ? "profit" : "loss"} of ${money(Math.abs(diff))}.`);
+  }},
+  simpleInterest: { group: "Money", label: "Simple interest", make: d => {
+    const principal = randStep(200, [1000, 5000, 20000][difficultyScale[d]-1], 10);
+    const rate = pick([2, 3, 4, 5, 6]);
+    const years = randInt(1, [1, 3, 5][difficultyScale[d]-1]);
+    const interest = principal * rate / 100 * years;
+    const final = principal + interest;
+    return question(`A savings account contains ${money(principal)} and pays ${rate}% simple interest per year. How much will be in the account after ${years} ${years === 1 ? "year" : "years"}?`, money(final), `Interest = ${rate}% of ${money(principal)} × ${years} = ${money(interest)}. Final amount = ${money(principal)} + ${money(interest)} = ${money(final)}.`, {
+      marks: 3,
+      responseSize: "medium"
+    });
   }},
   time: { group: "Time", label: "Duration & clocks", make: (d, index = 0) => {
     const startH=randInt(7,16), startM=pick([0,10,15,20,30,45]), duration=randInt(2,[8,18,30][difficultyScale[d]-1])*15, total=startH*60+startM+duration, endH=Math.floor(total/60)%24,endM=total%60;
@@ -233,6 +297,15 @@ const topics = {
     const red=randInt(1,[5,10,20][difficultyScale[d]-1]),blue=randInt(1,[5,10,20][difficultyScale[d]-1]),total=red+blue;
     return question(`A bag contains ${red} red counters and ${blue} blue counters. What is the probability of choosing a red counter?`, simplify(red,total), `There are ${total} counters altogether. Probability = red ÷ total = ${red}/${total} = ${simplify(red,total)}.`);
   }},
+  probabilityScale: { group: "Probability", label: "Probability scale", make: () => {
+    const favourable = pick([1, 2, 3, 4, 5]);
+    const answer = simplify(favourable, 6);
+    return question(`A fair dice is rolled. A player wins if it lands on one of ${favourable} winning numbers. What is the probability of winning? Show where this belongs on the probability scale.`, answer, `There are ${favourable} winning outcomes out of 6 equally likely outcomes, so the probability is ${favourable}/6 = ${answer}.`, {
+      marks: 2,
+      responseSize: "medium",
+      visual: `<div class="probability-scale"><span>Impossible<br>0</span><i></i><span>Even chance<br>1/2</span><i></i><span>Certain<br>1</span></div>`
+    });
+  }},
   fractionConversionTable: { group: "Fractions", label: "Fraction, decimal & percentage", make: () => {
     const options = [[1,2],[1,4],[3,4],[1,5],[2,5]], [n,d] = pick(options), decimal = n/d, percentage = decimal*100;
     return question(`Complete the table to show this fraction as a decimal and a percentage.`, `${decimal} and ${percentage}%`, `${n} ÷ ${d} = ${decimal}. Multiply the decimal by 100 to get ${percentage}%.`, {
@@ -251,6 +324,39 @@ const topics = {
       visual: `<table class="data-table"><thead><tr>${months.map(m => `<th>${m.slice(0,3)}</th>`).join("")}</tr></thead><tbody><tr>${values.map(v => `<td>${money(v)}</td>`).join("")}</tr></tbody></table>`,
       parts: [`a) Which month had the highest sales?`, `b) What is the range of the sales figures?`],
       quality: { uniqueValues: true, values }
+    });
+  }},
+  reviewSummaryTable: { group: "Statistics", label: "Complete a summary table", make: () => {
+    const total = pick([100, 200, 250]);
+    const excellentPct = pick([20, 25, 30, 40, 45]);
+    const excellent = total * excellentPct / 100;
+    const good = randStep(total * 0.25, total * 0.45, 5);
+    const average = total - excellent - good;
+    const goodPct = good / total * 100;
+    const averagePct = average / total * 100;
+    return question(`A website received ${total} reviews for a new product. ${excellentPct}% rated it excellent. ${good} rated it good. The remainder rated it average. Complete the summary table.`, `Excellent: ${excellent}; Good: ${goodPct}%; Average: ${average} and ${averagePct}%`, `Excellent score = ${excellentPct}% of ${total} = ${excellent}. Average score = ${total} - ${excellent} - ${good} = ${average}. Good percentage = ${good}/${total} × 100 = ${goodPct}%. Average percentage = ${average}/${total} × 100 = ${averagePct}%.`, {
+      marks: 3,
+      responseSize: "large",
+      visual: `<table class="data-table"><thead><tr><th>Rating</th><th>Score</th><th>Percentage</th></tr></thead><tbody><tr><td>Excellent</td><td class="blank-cell"></td><td>${excellentPct}%</td></tr><tr><td>Good</td><td>${good}</td><td class="blank-cell"></td></tr><tr><td>Average</td><td class="blank-cell"></td><td class="blank-cell"></td></tr></tbody></table>`
+    });
+  }},
+  meanRangeCompare: { group: "Statistics", label: "Mean and range comparison", make: d => {
+    const count = 7;
+    const values = Array.from({ length: count }, () => randInt(10, [80, 180, 260][difficultyScale[d]-1])).sort((a,b)=>a-b);
+    const sum = values.reduce((a,b)=>a+b,0);
+    values[count - 1] += (count - (sum % count)) % count;
+    values.sort((a,b)=>a-b);
+    const total = values.reduce((a,b)=>a+b,0);
+    const mean = total / count;
+    const range = values[count-1] - values[0];
+    const oldMean = mean + pick([-12, -8, 8, 12]);
+    const oldRange = Math.max(5, range + pick([-15, -10, 10, 15]));
+    const meanClaim = mean < oldMean;
+    const rangeClaim = range < oldRange;
+    return question(`A learner records these figures over seven days: ${values.join("  ")}. Last year the mean was ${oldMean} and the range was ${oldRange}. They think both the mean and range are lower this year. Are they correct?`, `${meanClaim && rangeClaim ? "Yes" : "No"}; mean ${mean}, range ${range}`, `Mean = ${total} ÷ ${count} = ${mean}. Range = ${values[count-1]} - ${values[0]} = ${range}. Compare these with last year's mean of ${oldMean} and range of ${oldRange}.`, {
+      marks: 3,
+      responseSize: "large",
+      parts: ["Calculate this year's mean.", "Calculate this year's range.", "State whether the claim is correct."]
     });
   }},
   mixedWeights: { group: "Measures", label: "Mixed-unit total", make: d => {
@@ -276,6 +382,21 @@ const topics = {
       marks: 5, responseSize: "large", visual: `<div class="formula-box"><strong>Use the formula</strong><span>time = distance ÷ average speed</span></div>`
     });
   }},
+  cookingFormula: { group: "Time", label: "Cooking formula time", make: d => {
+    const people = randInt(6, [12, 20, 30][difficultyScale[d]-1]);
+    const gramsEach = pick([100, 125, 150, 175, 200]);
+    const weightKg = tidy(people * gramsEach / 1000);
+    const cookingMinutes = weightKg * 40 + 15;
+    const readyTime = formatClock(randInt(12, 18) * 60);
+    const readyMinutes = parseInt(readyTime.split(":")[0], 10) % 12 * 60 + (readyTime.endsWith("pm") ? 12 * 60 : 0);
+    const startTime = formatClock(readyMinutes - cookingMinutes);
+    return question(`${pick(contextNames)} is cooking for ${people} people. Each person will have ${gramsEach}g of meat. Use the formula to work out the cooking time, then find the start time if the food needs to be ready at ${readyTime}.`, `${cookingMinutes} minutes; start at ${startTime}`, `Total weight = ${people} × ${gramsEach}g = ${people*gramsEach}g = ${weightKg}kg. Cooking time = ${weightKg} × 40 + 15 = ${cookingMinutes} minutes. Count back ${cookingMinutes} minutes from ${readyTime}: ${startTime}.`, {
+      marks: 5,
+      responseSize: "large",
+      visual: `<div class="formula-box"><strong>Use the formula</strong><span>cooking time in minutes = weight in kg × 40 + 15</span></div>`,
+      parts: ["Calculate the cooking time.", "What time should cooking start?"]
+    });
+  }},
   probabilityParts: { group: "Probability", label: "Probability with explanation", make: () => {
     const mostLikely=randInt(1,5), otherValues=[1,2,3,4,5].filter(value=>value!==mostLikely), extras=[...otherValues].sort(()=>Math.random()-0.5).slice(0,2), values=[mostLikely,mostLikely,mostLikely,mostLikely,...otherValues,...extras].sort(()=>Math.random()-0.5), target=pick(values), count=values.filter(v=>v===target).length;
     return question(`A spinner has ten equal sections labelled as shown. Answer both questions.`, `${simplify(count,10)}; ${mostLikely}`, `The number ${target} appears ${count} times out of 10, so its probability is ${simplify(count,10)}. The number ${mostLikely} appears most often, so it has the highest probability.`, {
@@ -294,16 +415,16 @@ const topics = {
 };
 
 const noCalculatorKeys = new Set([
-  "addition", "subtraction", "multiplication", "division", "negatives", "rounding",
+  "addition", "subtraction", "multiplication", "division", "negatives", "rounding", "orderOperations", "wordToFigures",
   "simplifyFractions", "fractionAmount", "compareFractions", "orderDecimals", "percentages",
-  "simplifyRatio", "sharingRatio", "time", "conversions", "perimeter", "area", "angles",
-  "averages", "probability", "fractionConversionTable", "salesTable", "probabilityParts"
+  "simplifyRatio", "sharingRatio", "subscriptionCompare", "simpleInterest", "time", "cookingFormula", "conversions", "perimeter", "area", "angles",
+  "averages", "probability", "probabilityScale", "fractionConversionTable", "salesTable", "reviewSummaryTable", "meanRangeCompare", "probabilityParts"
 ]);
 const calculatorKeys = new Set([
-  "decimalCalculations", "increase", "discounts", "shopping", "budgets", "bestBuys", "profit",
+  "decimalCalculations", "increase", "discounts", "shopping", "budgets", "bestBuys", "profit", "sharedBillCheck",
   "volume", "mixedWeights", "compareServices", "journeyFormula", "proportionReliability"
 ]);
-const variedFormatKeys = ["fractionConversionTable", "salesTable", "mixedWeights", "compareServices", "journeyFormula", "probabilityParts", "proportionReliability"];
+const variedFormatKeys = ["fractionConversionTable", "salesTable", "reviewSummaryTable", "meanRangeCompare", "mixedWeights", "compareServices", "subscriptionCompare", "sharedBillCheck", "simpleInterest", "journeyFormula", "cookingFormula", "probabilityParts", "probabilityScale", "proportionReliability", "orderOperations", "wordToFigures"];
 const groupMixedPrefix = "mixed-group:";
 
 const state = { questions: [], topicKey: "mixed", difficulty: "Medium", calculatorMode: "Mixed", view: "worksheet" };
