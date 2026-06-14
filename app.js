@@ -7,8 +7,9 @@ const tidy = value => Number(Number(value).toFixed(2));
 const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
 const simplify = (n, d) => `${n / gcd(n, d)}/${d / gcd(n, d)}`;
 const difficultyScale = { Easy: 1, Medium: 2, Hard: 3 };
-const contextNames = ["Aisha", "Ben", "Chloe", "Darius", "Ella", "Farah", "Grace", "Harvey", "Imani", "Jay"];
 const styleAt = (styles, index) => styles[index % styles.length];
+const contextNames = ["Aisha", "Ben", "Chloe", "Darius", "Ella", "Farah", "Grace", "Harvey", "Imani", "Jay", "Kiran", "Layla", "Mason", "Nadia", "Omar", "Priya", "Ravi", "Sofia", "Tariq", "Zara"];
+const nameAt = (index, offset = 0) => styleAt(contextNames, index + offset);
 const numberWordsOnes = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"];
 const numberWordsTens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
 
@@ -208,7 +209,7 @@ const topics = {
   }},
   fractionAmount: { group: "Fractions", label: "Fractions of amounts", make: (d, index = 0) => {
     const den = pick([2, 3, 4, 5, 8, 10]), n = randInt(1, den - 1), unit = randInt(3, [12, 25, 40][difficultyScale[d] - 1]), total = den * unit;
-    const name = pick(contextNames);
+    const name = nameAt(index, 2);
     const text = styleAt([
       `${name} spends ${n}/${den} of £${total} on travel. How much is spent on travel?`,
       `${name} has ${total} minutes for revision and uses ${n}/${den} of the time for maths. How many minutes is this?`,
@@ -220,7 +221,7 @@ const topics = {
       `A garden centre has ${total} plants. ${n}/${den} are herbs. How many herb plants are there?`
     ], index);
     const answer = styleAt([money(n * unit), `${n * unit} minutes`, `${n * unit} tickets`, `${n * unit} g`, `${n * unit} minutes`, `${n * unit} songs`, money(n * unit), `${n * unit} plants`], index);
-    return question(text, answer, `${total} ÷ ${den} = ${unit}; ${unit} × ${n} = ${n * unit}.`, { styleId: `fraction-amount-${index % 8}` });
+    return question(text, answer, `${total} ÷ ${den} = ${unit}; ${unit} × ${n} = ${n * unit}.`, { styleId: `fraction-amount-${index % 8}`, personName: [0, 1, 4].includes(index % 8) ? name : null });
   }},
   compareFractions: { group: "Fractions", label: "Comparing fractions", make: (difficulty, index = 0) => {
     let a = randInt(1, 8), b = randInt(a + 1, 12), c = randInt(1, 8), den = randInt(c + 1, 12);
@@ -326,17 +327,18 @@ const topics = {
   shopping: { group: "Money", label: "Shopping & change", make: (d, index = 0) => {
     const price = tidy(randInt(100, [800, 2500, 6000][difficultyScale[d] - 1]) / 100), qty = randInt(2, 5), paid = Math.ceil(price * qty / 10) * 10, total = tidy(price * qty);
     const item = styleAt(["birthday candles", "beach towels", "Christmas baubles", "picnic sandwiches", "plant pots", "wedding favours", "travel adapters", "photo frames"], index);
+    const name = nameAt(index, 5);
     const text = styleAt([
-      `${pick(contextNames)} buys ${qty} ${item} costing ${money(price)} each and pays with ${money(paid)}. How much change should they receive?`,
+      `${name} buys ${qty} ${item} costing ${money(price)} each and pays with ${money(paid)}. How much change should they receive?`,
       `A party organiser buys ${qty} ${item} at ${money(price)} each. They pay ${money(paid)}. Work out the change.`,
       `A Christmas shopper buys ${qty} ${item} for ${money(price)} each. They pay with ${money(paid)}. How much change is due?`,
-      `${pick(contextNames)} pays ${money(paid)} for ${qty} ${item} before going on holiday. Each one costs ${money(price)}. Calculate the change.`,
+      `${name} pays ${money(paid)} for ${qty} ${item} before going on holiday. Each one costs ${money(price)}. Calculate the change.`,
       `A market stall sells ${qty} ${item} for ${money(price)} each. A customer pays ${money(paid)}. What change should be given?`,
       `A wedding planner buys ${qty} ${item} at ${money(price)} each and pays ${money(paid)}. How much money is left?`,
       `A neighbour buys ${qty} ${item} for a summer barbecue. Each costs ${money(price)} and they pay ${money(paid)}. Find the change.`,
       `A parent buys ${qty} ${item} for a school event at ${money(price)} each. They pay ${money(paid)}. How much change should they get?`
     ], index);
-    return question(text, money(paid - total), `${qty} × ${money(price)} = ${money(total)}. ${money(paid)} − ${money(total)} = ${money(paid - total)}.`, { styleId: `shopping-${index % 8}` });
+    return question(text, money(paid - total), `${qty} × ${money(price)} = ${money(total)}. ${money(paid)} − ${money(total)} = ${money(paid - total)}.`, { styleId: `shopping-${index % 8}`, personName: [0, 3].includes(index % 8) ? name : null });
   }},
   budgets: { group: "Money", label: "Budgets", make: (d, index = 0) => {
     const rent = randInt(5, 15) * 20, food = randInt(3, 10) * 20, travel = randInt(2, 8) * 20, left = randInt(2, [8, 18, 30][difficultyScale[d] - 1]) * 20, income = rent + food + travel + left;
@@ -364,10 +366,12 @@ const topics = {
     const saving = tidy(currentTotal - newTotal);
     const service = styleAt(["phone contract", "gym membership", "broadband package", "music subscription", "meal delivery plan", "streaming package", "insurance policy", "cloud storage plan"], index);
     const supplier = styleAt(["company", "provider", "supplier", "service", "new offer", "alternative plan", "comparison deal", "new contract"], index);
-    return question(`${pick(contextNames)} currently pays ${money(currentMonthly)} per month for a ${service}. A new ${supplier} charges a joining fee of ${money(joiningFee)} plus ${money(newMonthly)} per month for a minimum contract of 1 year. Will changing save money? Explain your answer.`, `${saving > 0 ? "Yes" : "No"}; ${saving > 0 ? `saves ${money(saving)}` : `costs ${money(Math.abs(saving))} more`}`, `Current yearly cost = 12 × ${money(currentMonthly)} = ${money(currentTotal)}. New yearly cost = ${money(joiningFee)} + 12 × ${money(newMonthly)} = ${money(newTotal)}. Difference = ${money(Math.abs(saving))}.`, {
+    const name = nameAt(index, 8);
+    return question(`${name} currently pays ${money(currentMonthly)} per month for a ${service}. A new ${supplier} charges a joining fee of ${money(joiningFee)} plus ${money(newMonthly)} per month for a minimum contract of 1 year. Will changing save money? Explain your answer.`, `${saving > 0 ? "Yes" : "No"}; ${saving > 0 ? `saves ${money(saving)}` : `costs ${money(Math.abs(saving))} more`}`, `Current yearly cost = 12 × ${money(currentMonthly)} = ${money(currentTotal)}. New yearly cost = ${money(joiningFee)} + 12 × ${money(newMonthly)} = ${money(newTotal)}. Difference = ${money(Math.abs(saving))}.`, {
       marks: 3,
       responseSize: "large",
       styleId: `subscription-compare-${index % 8}`,
+      personName: name,
       parts: ["Calculate the current yearly cost.", "Calculate the new yearly cost.", "State whether changing saves money."]
     });
   }},
@@ -409,16 +413,18 @@ const topics = {
     const years = randInt(1, [1, 3, 5][difficultyScale[d]-1]);
     const interest = principal * rate / 100 * years;
     const final = principal + interest;
+    const name = nameAt(index, 11);
     const text = styleAt([
       `A savings account contains ${money(principal)} and pays ${rate}% simple interest per year. How much will be in the account after ${years} ${years === 1 ? "year" : "years"}?`,
-      `${pick(contextNames)} invests ${money(principal)} at ${rate}% simple interest each year. What is the value after ${years} ${years === 1 ? "year" : "years"}?`,
+      `${name} invests ${money(principal)} at ${rate}% simple interest each year. What is the value after ${years} ${years === 1 ? "year" : "years"}?`,
       `A credit union pays ${rate}% simple interest per year on ${money(principal)}. Calculate the total after ${years} ${years === 1 ? "year" : "years"}.`,
       `An account starts with ${money(principal)}. It earns ${rate}% simple interest each year for ${years} ${years === 1 ? "year" : "years"}. Work out the final amount.`
     ], index);
     return question(text, money(final), `Interest = ${rate}% of ${money(principal)} × ${years} = ${money(interest)}. Final amount = ${money(principal)} + ${money(interest)} = ${money(final)}.`, {
       marks: 3,
       responseSize: "medium",
-      styleId: `simple-interest-${index % 4}`
+      styleId: `simple-interest-${index % 4}`,
+      personName: index % 4 === 1 ? name : null
     });
   }},
   time: { group: "Time", label: "Duration & clocks", make: (d, index = 0) => {
@@ -624,10 +630,12 @@ const topics = {
     const readyMinutes = parseInt(readyTime.split(":")[0], 10) % 12 * 60 + (readyTime.endsWith("pm") ? 12 * 60 : 0);
     const startTime = formatClock(readyMinutes - cookingMinutes);
     const food = styleAt(["meat", "vegetarian roast", "joint of beef", "tray bake", "Christmas turkey", "party lasagne", "holiday cottage roast", "wedding buffet dish"], index);
-    return question(`${pick(contextNames)} is cooking for ${people} people. Each person will have ${gramsEach}g of ${food}. Use the formula to work out the cooking time, then find the start time if the food needs to be ready at ${readyTime}.`, `${cookingMinutes} minutes; start at ${startTime}`, `Total weight = ${people} × ${gramsEach}g = ${people*gramsEach}g = ${weightKg}kg. Cooking time = ${weightKg} × 40 + 15 = ${cookingMinutes} minutes. Count back ${cookingMinutes} minutes from ${readyTime}: ${startTime}.`, {
+    const name = nameAt(index, 14);
+    return question(`${name} is cooking for ${people} people. Each person will have ${gramsEach}g of ${food}. Use the formula to work out the cooking time, then find the start time if the food needs to be ready at ${readyTime}.`, `${cookingMinutes} minutes; start at ${startTime}`, `Total weight = ${people} × ${gramsEach}g = ${people*gramsEach}g = ${weightKg}kg. Cooking time = ${weightKg} × 40 + 15 = ${cookingMinutes} minutes. Count back ${cookingMinutes} minutes from ${readyTime}: ${startTime}.`, {
       marks: 5,
       responseSize: "large",
       styleId: `cooking-formula-${index % 8}`,
+      personName: name,
       visual: `<div class="formula-box"><strong>Use the formula</strong><span>cooking time in minutes = weight in kg × 40 + 15</span></div>`,
       parts: ["Calculate the cooking time.", "What time should cooking start?"]
     });
@@ -663,9 +671,11 @@ const topics = {
       { mode: "on a Christmas delivery route", reason: "traffic, parking or extra stops could change the speed" },
       { mode: "on a sponsored walk", reason: "weather, rests or tiredness could change the pace" }
     ], index);
-    return question(`${pick(contextNames)} takes ${knownMinutes} minutes to travel ${knownDistance} miles ${travel.mode}. Estimate how long it will take to travel ${target} miles. Give one reason why the estimate may be unreliable.`, `${estimate} minutes; speed may change`, `${knownMinutes} ÷ ${knownDistance} = ${knownMinutes/knownDistance} minutes per mile. ${knownMinutes/knownDistance} × ${target} = ${estimate} minutes. The estimate assumes the same speed throughout, but ${travel.reason}.`, {
+    const name = nameAt(index, 17);
+    return question(`${name} takes ${knownMinutes} minutes to travel ${knownDistance} miles ${travel.mode}. Estimate how long it will take to travel ${target} miles. Give one reason why the estimate may be unreliable.`, `${estimate} minutes; speed may change`, `${knownMinutes} ÷ ${knownDistance} = ${knownMinutes/knownDistance} minutes per mile. ${knownMinutes/knownDistance} × ${target} = ${estimate} minutes. The estimate assumes the same speed throughout, but ${travel.reason}.`, {
       marks: 4, responseSize: "large", parts: [`a) Calculate the estimated time.`, `b) Give one reason why this estimate may be unreliable.`],
       styleId: `proportion-reliability-${index % 8}`,
+      personName: name,
       quality: { exactScale: true, start: knownDistance, target }
     });
   }}
@@ -737,10 +747,43 @@ function makeQuestion(key, index = 0) {
   });
 }
 
+function hasAdjacentConflict(left, right) {
+  if (!left || !right) return false;
+  if (left.styleId && left.styleId === right.styleId) return true;
+  return Boolean(left.personName && right.personName && left.personName === right.personName);
+}
+
+function arrangeQuestionSequence(items) {
+  const remaining = [...items];
+  const arranged = [];
+  while (remaining.length) {
+    const previous = arranged[arranged.length - 1];
+    const compatible = remaining
+      .map((candidate, index) => ({ candidate, index }))
+      .filter(({ candidate }) => !hasAdjacentConflict(previous, candidate));
+    const pool = compatible.length ? compatible : remaining.map((candidate, index) => ({ candidate, index }));
+    const pressure = item => remaining.reduce((score, other) => (
+      score +
+      (item.styleId && item.styleId === other.styleId ? 1 : 0) +
+      (item.personName && item.personName === other.personName ? 1 : 0)
+    ), 0);
+    const nextIndex = pool.reduce((best, current) => (
+      pressure(current.candidate) > pressure(best.candidate) ? current : best
+    )).index;
+    const [next] = remaining.splice(nextIndex >= 0 ? nextIndex : 0, 1);
+    arranged.push(next);
+  }
+  items.splice(0, items.length, ...arranged);
+  return items;
+}
+
 function validateQuestionSequence(items) {
   items.forEach((item, index) => {
     if (index > 0 && item.styleId && item.styleId === items[index - 1].styleId) {
       throw new Error("Adjacent questions must not use the same question style.");
+    }
+    if (index > 0 && item.personName && item.personName === items[index - 1].personName) {
+      throw new Error("Adjacent questions must not use the same named person.");
     }
   });
 }
@@ -796,6 +839,7 @@ function generate() {
   } else {
     state.questions = Array.from({ length: total }, (_, index) => makeQuestion(state.topicKey, index));
   }
+  arrangeQuestionSequence(state.questions);
   validateQuestionSequence(state.questions);
   state.view = "worksheet";
   document.querySelectorAll(".view-tabs button").forEach(button => button.classList.toggle("active", button.dataset.view === state.view));
