@@ -2,6 +2,7 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const pick = items => items[randInt(0, items.length - 1)];
 const randStep = (min, max, step) => randInt(Math.ceil(min / step), Math.floor(max / step)) * step;
 const money = value => `£${Number(value).toFixed(2)}`;
+const signedMoney = value => value < 0 ? `-£${Math.abs(Number(value)).toFixed(2)}` : money(value);
 const tidy = value => Number(Number(value).toFixed(2));
 const gcd = (a, b) => b ? gcd(b, a % b) : Math.abs(a);
 const simplify = (n, d) => `${n / gcd(n, d)}/${d / gcd(n, d)}`;
@@ -135,35 +136,80 @@ const topics = {
     ], index);
     return question(text, answer, `${a} ÷ ${b} = ${answer}`, { styleId: `division-${index % 5}` });
   }},
-  negatives: { group: "Number", label: "Negative numbers", make: d => {
+  negatives: { group: "Number", label: "Negative numbers", make: (d, index = 0) => {
     const start = randInt(-12, 5), change = randInt(4, [9, 15, 22][difficultyScale[d] - 1]) * pick([-1, 1]), end = start + change;
-    return question(`At 6 am the temperature was ${start}°C. It then ${change > 0 ? "rose" : "fell"} by ${Math.abs(change)}°C. What was the new temperature?`, `${end}°C`, `${start} ${change >= 0 ? "+" : "−"} ${Math.abs(change)} = ${end}°C`);
+    const text = styleAt([
+      `At 6 am the temperature was ${start}°C. It then ${change > 0 ? "rose" : "fell"} by ${Math.abs(change)}°C. What was the new temperature?`,
+      `A freezer display showed ${start}°C. The temperature ${change > 0 ? "increased" : "decreased"} by ${Math.abs(change)}°C. What temperature did it show next?`,
+      `A hill walk starts at ${start} m compared with sea level. The route then goes ${change > 0 ? "up" : "down"} ${Math.abs(change)} m. What is the new height compared with sea level?`,
+      `An account balance is ${start < 0 ? `overdrawn by £${Math.abs(start)}` : `£${start}`}. It then ${change > 0 ? "receives" : "spends"} £${Math.abs(change)}. What is the new balance?`
+    ], index);
+    return question(text, index % 4 === 3 ? signedMoney(end) : `${end}${index % 4 === 2 ? " m" : "°C"}`, `${start} ${change >= 0 ? "+" : "−"} ${Math.abs(change)} = ${end}`, { styleId: `negatives-${index % 4}` });
   }},
-  rounding: { group: "Number", label: "Rounding & estimation", make: d => {
+  rounding: { group: "Number", label: "Rounding & estimation", make: (d, index = 0) => {
     const place = [10, 100, 1000][difficultyScale[d] - 1], n = randInt(place, place * 20), ans = Math.round(n / place) * place;
-    return question(`Round ${n.toLocaleString()} to the nearest ${place.toLocaleString()}.`, ans.toLocaleString(), `${n.toLocaleString()} lies closest to ${ans.toLocaleString()} when rounded to the nearest ${place.toLocaleString()}.`);
+    const text = styleAt([
+      `Round ${n.toLocaleString()} to the nearest ${place.toLocaleString()}.`,
+      `A venue counted ${n.toLocaleString()} visitors. Round this number to the nearest ${place.toLocaleString()}.`,
+      `A delivery distance is ${n.toLocaleString()} metres. Give this distance to the nearest ${place.toLocaleString()} metres.`,
+      `A charity raised £${n.toLocaleString()}. Estimate this amount by rounding to the nearest £${place.toLocaleString()}.`
+    ], index);
+    return question(text, ans.toLocaleString(), `${n.toLocaleString()} lies closest to ${ans.toLocaleString()} when rounded to the nearest ${place.toLocaleString()}.`, { styleId: `rounding-${index % 4}` });
   }},
-  orderOperations: { group: "Number", label: "Order of operations", make: d => {
+  orderOperations: { group: "Number", label: "Order of operations", make: (d, index = 0) => {
     const a = randInt(20, [60, 90, 140][difficultyScale[d] - 1]), b = randInt(4, 18), c = pick([2, 3, 4, 6]), dValue = randInt(2, 8), answer = a + b * dValue - c * dValue;
-    return question(`${a} + ${b} × ${dValue} - (${c} × ${dValue}) =`, answer, `Calculate the multiplications first: ${b} × ${dValue} = ${b*dValue} and ${c} × ${dValue} = ${c*dValue}. Then ${a} + ${b*dValue} - ${c*dValue} = ${answer}.`, { marks: 2, styleId: "order-operations" });
+    const text = styleAt([
+      `${a} + ${b} × ${dValue} - (${c} × ${dValue}) =`,
+      `Calculate ${a} + ${b} × ${dValue} - ${c} × ${dValue}.`,
+      `Work out the value of ${a} + (${b} × ${dValue}) - (${c} × ${dValue}).`,
+      `Use the correct order of operations to calculate ${a} + ${b} × ${dValue} - (${c} × ${dValue}).`
+    ], index);
+    return question(text, answer, `Calculate the multiplications first: ${b} × ${dValue} = ${b*dValue} and ${c} × ${dValue} = ${c*dValue}. Then ${a} + ${b*dValue} - ${c*dValue} = ${answer}.`, { marks: 2, styleId: `order-operations-${index % 4}` });
   }},
-  wordToFigures: { group: "Number", label: "Words and figures", make: d => {
+  wordToFigures: { group: "Number", label: "Words and figures", make: (d, index = 0) => {
     const number = randInt(120, [250, 650, 950][difficultyScale[d] - 1]) * 1000 + randInt(100, 999);
-    return question(`Write the following number using figures: ${numberToWords(number)}.`, number.toLocaleString(), `${numberToWords(number)} is written as ${number.toLocaleString()}.`, { marks: 1, responseSize: "small", styleId: "word-to-figures" });
+    const words = numberToWords(number);
+    const text = styleAt([
+      `Write the following number using figures: ${words}.`,
+      `A report states the value as ${words}. Write this in figures.`,
+      `A form shows the number ${words} in words. Write the number using digits.`,
+      `Write ${words} as a number.`
+    ], index);
+    return question(text, number.toLocaleString(), `${words} is written as ${number.toLocaleString()}.`, { marks: 1, responseSize: "small", styleId: `word-to-figures-${index % 4}` });
   }},
-  simplifyFractions: { group: "Fractions", label: "Simplifying fractions", make: d => {
+  simplifyFractions: { group: "Fractions", label: "Simplifying fractions", make: (d, index = 0) => {
     const baseD = randInt(3, [8, 12, 18][difficultyScale[d] - 1]), baseN = randInt(1, baseD - 1), factor = randInt(2, 8), n = baseN * factor, den = baseD * factor;
-    return question(`Write ${n}/${den} in its simplest form.`, simplify(n, den), `The highest common factor is ${gcd(n, den)}. Divide top and bottom by ${gcd(n, den)}: ${n}/${den} = ${simplify(n, den)}.`);
+    const text = styleAt([
+      `Write ${n}/${den} in its simplest form.`,
+      `Simplify the fraction ${n}/${den}.`,
+      `A learner writes the fraction ${n}/${den}. Give it in its simplest form.`,
+      `Reduce ${n}/${den} to its simplest form.`
+    ], index);
+    return question(text, simplify(n, den), `The highest common factor is ${gcd(n, den)}. Divide top and bottom by ${gcd(n, den)}: ${n}/${den} = ${simplify(n, den)}.`, { styleId: `simplify-fractions-${index % 4}` });
   }},
-  fractionAmount: { group: "Fractions", label: "Fractions of amounts", make: d => {
+  fractionAmount: { group: "Fractions", label: "Fractions of amounts", make: (d, index = 0) => {
     const den = pick([2, 3, 4, 5, 8, 10]), n = randInt(1, den - 1), unit = randInt(3, [12, 25, 40][difficultyScale[d] - 1]), total = den * unit;
-    return question(`${pick(contextNames)} spends ${n}/${den} of £${total} on travel. How much is spent on travel?`, money(n * unit), `£${total} ÷ ${den} = £${unit}; £${unit} × ${n} = ${money(n * unit)}.`);
+    const name = pick(contextNames);
+    const text = styleAt([
+      `${name} spends ${n}/${den} of £${total} on travel. How much is spent on travel?`,
+      `${name} has ${total} minutes for revision and uses ${n}/${den} of the time for maths. How many minutes is this?`,
+      `A charity event has ${total} raffle tickets. ${n}/${den} of the tickets are sold online. How many tickets are sold online?`,
+      `A recipe uses ${n}/${den} of a ${total} g bag of flour. How many grams of flour are used?`
+    ], index);
+    const answer = styleAt([money(n * unit), `${n * unit} minutes`, `${n * unit} tickets`, `${n * unit} g`], index);
+    return question(text, answer, `${total} ÷ ${den} = ${unit}; ${unit} × ${n} = ${n * unit}.`, { styleId: `fraction-amount-${index % 4}` });
   }},
-  compareFractions: { group: "Fractions", label: "Comparing fractions", make: () => {
-    let a = randInt(1, 8), b = randInt(a + 1, 12), c = randInt(1, 8), d = randInt(c + 1, 12);
-    while (a * d === c * b) c = randInt(1, d - 1);
-    const leftLarger = a * d > c * b;
-    return question(`Which fraction is larger: ${a}/${b} or ${c}/${d}?`, leftLarger ? `${a}/${b}` : `${c}/${d}`, `Cross-multiply: ${a} × ${d} = ${a * d} and ${c} × ${b} = ${c * b}. The larger result belongs to ${leftLarger ? `${a}/${b}` : `${c}/${d}`}.`);
+  compareFractions: { group: "Fractions", label: "Comparing fractions", make: (difficulty, index = 0) => {
+    let a = randInt(1, 8), b = randInt(a + 1, 12), c = randInt(1, 8), den = randInt(c + 1, 12);
+    while (a * den === c * b) c = randInt(1, den - 1);
+    const leftLarger = a * den > c * b;
+    const text = styleAt([
+      `Which fraction is larger: ${a}/${b} or ${c}/${den}?`,
+      `Compare ${a}/${b} and ${c}/${den}. Which is greater?`,
+      `Two learners choose ${a}/${b} and ${c}/${den}. Which fraction is larger?`,
+      `Circle the larger fraction: ${a}/${b} or ${c}/${den}.`
+    ], index);
+    return question(text, leftLarger ? `${a}/${b}` : `${c}/${den}`, `Cross-multiply: ${a} × ${den} = ${a * den} and ${c} × ${b} = ${c * b}. The larger result belongs to ${leftLarger ? `${a}/${b}` : `${c}/${den}`}.`, { styleId: `compare-fractions-${index % 4}` });
   }},
   decimalCalculations: { group: "Decimals", label: "Decimal calculations", make: (d, index = 0) => {
     const a = tidy(randInt(20, [100, 500, 2000][difficultyScale[d] - 1]) / 10), b = tidy(randInt(10, a * 10) / 10);
@@ -175,10 +221,16 @@ const topics = {
     ], index);
     return question(text, `${tidy(a + b)} ${index % 4 === 1 ? "km" : index % 4 === 2 ? "kg" : index % 4 === 3 ? "litres" : "m"}`, `${a} + ${b} = ${tidy(a + b)}`, { styleId: `decimal-${index % 4}` });
   }},
-  orderDecimals: { group: "Decimals", label: "Ordering decimals", make: d => {
+  orderDecimals: { group: "Decimals", label: "Ordering decimals", make: (d, index = 0) => {
     const places = difficultyScale[d] === 1 ? 10 : 100, nums = Array.from(new Set(Array.from({length: 7}, () => randInt(1, places * 3) / places))).slice(0, 4);
     const ordered = [...nums].sort((a,b) => a-b);
-    return question(`Put these numbers in ascending order: ${nums.join(", ")}.`, ordered.join(", "), `Ascending means smallest to largest: ${ordered.join(" < ")}.`);
+    const text = styleAt([
+      `Put these numbers in ascending order: ${nums.join(", ")}.`,
+      `Order these decimal measurements from smallest to largest: ${nums.join(", ")}.`,
+      `A set of results is ${nums.join(", ")}. Write them in ascending order.`,
+      `Arrange these decimals from lowest to highest: ${nums.join(", ")}.`
+    ], index);
+    return question(text, ordered.join(", "), `Ascending means smallest to largest: ${ordered.join(" < ")}.`, { styleId: `order-decimals-${index % 4}` });
   }},
   percentages: { group: "Percentages", label: "Percentages of amounts", make: (d, index = 0) => {
     const pct = pick([5, 10, 20, 25, 40, 50, 75]), base = randInt(2, [12, 30, 60][difficultyScale[d] - 1]) * 20, ans = base * pct / 100;
@@ -190,32 +242,65 @@ const topics = {
     ], index);
     return question(text, ans, `${pct}% of ${base} = ${pct}/100 × ${base} = ${ans}.`, { styleId: `percentage-${index % 4}` });
   }},
-  increase: { group: "Percentages", label: "Percentage increase & decrease", make: d => {
+  increase: { group: "Percentages", label: "Percentage increase & decrease", make: (d, index = 0) => {
     const pct = pick([5, 10, 20, 25]), base = randInt(2, [10, 25, 50][difficultyScale[d] - 1]) * 20, up = pick([true, false]), change = base * pct / 100, ans = up ? base + change : base - change;
-    return question(`A monthly budget of ${money(base)} is ${up ? "increased" : "decreased"} by ${pct}%. What is the new budget?`, money(ans), `${pct}% of ${money(base)} = ${money(change)}. ${money(base)} ${up ? "+" : "−"} ${money(change)} = ${money(ans)}.`);
+    const text = styleAt([
+      `A monthly budget of ${money(base)} is ${up ? "increased" : "decreased"} by ${pct}%. What is the new budget?`,
+      `A membership fee of ${money(base)} is ${up ? "increased" : "reduced"} by ${pct}%. What is the new fee?`,
+      `A shop changes a price of ${money(base)} by ${pct}%. The price is ${up ? "increased" : "decreased"}. What is the new price?`,
+      `A club has ${base} members. The number of members ${up ? "increases" : "decreases"} by ${pct}%. How many members are there now?`
+    ], index);
+    const answer = index % 4 === 3 ? ans : money(ans);
+    return question(text, answer, `${pct}% of ${index % 4 === 3 ? base : money(base)} = ${index % 4 === 3 ? change : money(change)}. ${index % 4 === 3 ? base : money(base)} ${up ? "+" : "−"} ${index % 4 === 3 ? change : money(change)} = ${answer}.`, { styleId: `increase-${index % 4}` });
   }},
   discounts: { group: "Percentages", label: "Discounts & VAT", make: (d, index = 0) => {
     const discount = pick([10, 15, 20, 25, 30]), price = randInt(2, [10, 25, 60][difficultyScale[d] - 1]) * 20, saving = price * discount / 100, sale = price - saving;
     const item = styleAt(["jacket", "bicycle", "laptop", "sofa", "train ticket"], index);
     return question(`A ${item} costs ${money(price)}. It is reduced by ${discount}%. What is the sale price?`, money(sale), `${discount}% of ${money(price)} = ${money(saving)}. ${money(price)} − ${money(saving)} = ${money(sale)}.`, { styleId: `discount-${index % 5}` });
   }},
-  simplifyRatio: { group: "Ratio & proportion", label: "Simplifying ratios", make: d => {
+  simplifyRatio: { group: "Ratio & proportion", label: "Simplifying ratios", make: (d, index = 0) => {
     const a = randInt(1, [6, 10, 15][difficultyScale[d] - 1]), b = randInt(1, [6, 10, 15][difficultyScale[d] - 1]), factor = randInt(2, 8);
-    return question(`Simplify the ratio ${a * factor}:${b * factor}.`, `${a / gcd(a,b)}:${b / gcd(a,b)}`, `Divide both parts by ${factor * gcd(a,b)} to get ${a / gcd(a,b)}:${b / gcd(a,b)}.`);
+    const text = styleAt([
+      `Simplify the ratio ${a * factor}:${b * factor}.`,
+      `A recipe uses ingredients in the ratio ${a * factor}:${b * factor}. Write the ratio in its simplest form.`,
+      `A group has ${a * factor} adults and ${b * factor} children. Simplify the ratio adults:children.`,
+      `Reduce the ratio ${a * factor}:${b * factor} to its simplest form.`
+    ], index);
+    return question(text, `${a / gcd(a,b)}:${b / gcd(a,b)}`, `Divide both parts by ${factor * gcd(a,b)} to get ${a / gcd(a,b)}:${b / gcd(a,b)}.`, { styleId: `simplify-ratio-${index % 4}` });
   }},
-  sharingRatio: { group: "Ratio & proportion", label: "Sharing in ratios", make: d => {
+  sharingRatio: { group: "Ratio & proportion", label: "Sharing in ratios", make: (d, index = 0) => {
     const a = randInt(1, 5), b = randInt(1, 5), unit = randInt(3, [10, 20, 40][difficultyScale[d] - 1]), total = (a + b) * unit;
-    return question(`${money(total)} is shared between two clubs in the ratio ${a}:${b}. How much does each club receive?`, `${money(a * unit)} and ${money(b * unit)}`, `Total parts = ${a} + ${b} = ${a+b}. One part = ${money(total)} ÷ ${a+b} = ${money(unit)}. Shares: ${a} × ${money(unit)} = ${money(a*unit)} and ${b} × ${money(unit)} = ${money(b*unit)}.`);
+    const contexts = [
+      { text: `${money(total)} is shared between two clubs in the ratio ${a}:${b}. How much does each club receive?`, answer: `${money(a * unit)} and ${money(b * unit)}`, unitText: money(unit), totalText: money(total) },
+      { text: `${total} leaflets are split between morning and afternoon volunteers in the ratio ${a}:${b}. How many leaflets does each group get?`, answer: `${a * unit} and ${b * unit}`, unitText: unit, totalText: total },
+      { text: `A grant of ${money(total)} is shared between equipment and coaching in the ratio ${a}:${b}. How much is spent on each?`, answer: `${money(a * unit)} and ${money(b * unit)}`, unitText: money(unit), totalText: money(total) },
+      { text: `${total} minutes of room hire is divided between two classes in the ratio ${a}:${b}. How many minutes does each class get?`, answer: `${a * unit} minutes and ${b * unit} minutes`, unitText: unit, totalText: total }
+    ];
+    const scenario = styleAt(contexts, index);
+    return question(scenario.text, scenario.answer, `Total parts = ${a} + ${b} = ${a+b}. One part = ${scenario.totalText} ÷ ${a+b} = ${scenario.unitText}. Shares are ${a} parts and ${b} parts.`, { styleId: `sharing-ratio-${index % contexts.length}` });
   }},
-  shopping: { group: "Money", label: "Shopping & change", make: d => {
+  shopping: { group: "Money", label: "Shopping & change", make: (d, index = 0) => {
     const price = tidy(randInt(100, [800, 2500, 6000][difficultyScale[d] - 1]) / 100), qty = randInt(2, 5), paid = Math.ceil(price * qty / 10) * 10, total = tidy(price * qty);
-    return question(`${pick(contextNames)} buys ${qty} items costing ${money(price)} each and pays with ${money(paid)}. How much change should they receive?`, money(paid - total), `${qty} × ${money(price)} = ${money(total)}. ${money(paid)} − ${money(total)} = ${money(paid - total)}.`);
+    const item = styleAt(["notebooks", "paint brushes", "sandwiches", "plant pots", "folders"], index);
+    const text = styleAt([
+      `${pick(contextNames)} buys ${qty} ${item} costing ${money(price)} each and pays with ${money(paid)}. How much change should they receive?`,
+      `A tutor buys ${qty} ${item} at ${money(price)} each. They pay ${money(paid)}. Work out the change.`,
+      `A shop sells ${qty} ${item} for ${money(price)} each. A customer pays with ${money(paid)}. How much change is due?`,
+      `${pick(contextNames)} pays ${money(paid)} for ${qty} ${item}. Each one costs ${money(price)}. Calculate the change.`
+    ], index);
+    return question(text, money(paid - total), `${qty} × ${money(price)} = ${money(total)}. ${money(paid)} − ${money(total)} = ${money(paid - total)}.`, { styleId: `shopping-${index % 4}` });
   }},
-  budgets: { group: "Money", label: "Budgets", make: d => {
+  budgets: { group: "Money", label: "Budgets", make: (d, index = 0) => {
     const rent = randInt(5, 15) * 20, food = randInt(3, 10) * 20, travel = randInt(2, 8) * 20, left = randInt(2, [8, 18, 30][difficultyScale[d] - 1]) * 20, income = rent + food + travel + left;
-    return question(`A household has ${money(income)} available. It budgets ${money(rent)} for rent, ${money(food)} for food and ${money(travel)} for travel. How much remains?`, money(left), `Total spending = ${money(rent)} + ${money(food)} + ${money(travel)} = ${money(rent+food+travel)}. Remaining = ${money(income)} − ${money(rent+food+travel)} = ${money(left)}.`, { quality: { nonNegative: true, value: left } });
+    const text = styleAt([
+      `A household has ${money(income)} available. It budgets ${money(rent)} for rent, ${money(food)} for food and ${money(travel)} for travel. How much remains?`,
+      `A class trip has a budget of ${money(income)}. It spends ${money(rent)} on transport, ${money(food)} on tickets and ${money(travel)} on food. How much is left?`,
+      `A community group receives ${money(income)}. It plans to spend ${money(rent)}, ${money(food)} and ${money(travel)} on three activities. How much remains?`,
+      `A learner has ${money(income)} for the month. They set aside ${money(rent)}, ${money(food)} and ${money(travel)}. How much is still available?`
+    ], index);
+    return question(text, money(left), `Total spending = ${money(rent)} + ${money(food)} + ${money(travel)} = ${money(rent+food+travel)}. Remaining = ${money(income)} − ${money(rent+food+travel)} = ${money(left)}.`, { styleId: `budgets-${index % 4}`, quality: { nonNegative: true, value: left } });
   }},
-  subscriptionCompare: { group: "Money", label: "Contract comparison", make: d => {
+  subscriptionCompare: { group: "Money", label: "Contract comparison", make: (d, index = 0) => {
     const currentMonthly = tidy(randStep(2500, [4500, 6500, 9000][difficultyScale[d]-1], 50) / 100);
     const joiningFee = randStep(1500, [4000, 7000, 10000][difficultyScale[d]-1], 500) / 100;
     const newMonthly = tidy(Math.max(15, currentMonthly - randStep(200, 900, 50) / 100));
@@ -223,40 +308,59 @@ const topics = {
     const currentTotal = currentMonthly * months;
     const newTotal = joiningFee + newMonthly * months;
     const saving = tidy(currentTotal - newTotal);
-    return question(`${pick(contextNames)} currently pays ${money(currentMonthly)} per month for a subscription. A new company charges a joining fee of ${money(joiningFee)} plus ${money(newMonthly)} per month for a minimum contract of 1 year. Will changing company save money? Explain your answer.`, `${saving > 0 ? "Yes" : "No"}; ${saving > 0 ? `saves ${money(saving)}` : `costs ${money(Math.abs(saving))} more`}`, `Current yearly cost = 12 × ${money(currentMonthly)} = ${money(currentTotal)}. New yearly cost = ${money(joiningFee)} + 12 × ${money(newMonthly)} = ${money(newTotal)}. Difference = ${money(Math.abs(saving))}.`, {
+    const service = styleAt(["phone contract", "gym membership", "broadband package", "music subscription"], index);
+    const supplier = styleAt(["company", "provider", "supplier", "service"], index);
+    return question(`${pick(contextNames)} currently pays ${money(currentMonthly)} per month for a ${service}. A new ${supplier} charges a joining fee of ${money(joiningFee)} plus ${money(newMonthly)} per month for a minimum contract of 1 year. Will changing save money? Explain your answer.`, `${saving > 0 ? "Yes" : "No"}; ${saving > 0 ? `saves ${money(saving)}` : `costs ${money(Math.abs(saving))} more`}`, `Current yearly cost = 12 × ${money(currentMonthly)} = ${money(currentTotal)}. New yearly cost = ${money(joiningFee)} + 12 × ${money(newMonthly)} = ${money(newTotal)}. Difference = ${money(Math.abs(saving))}.`, {
       marks: 3,
       responseSize: "large",
+      styleId: `subscription-compare-${index % 4}`,
       parts: ["Calculate the current yearly cost.", "Calculate the new yearly cost.", "State whether changing saves money."]
     });
   }},
-  sharedBillCheck: { group: "Money", label: "Shared bill check", make: d => {
+  sharedBillCheck: { group: "Money", label: "Shared bill check", make: (d, index = 0) => {
     const people = randInt(3, [5, 8, 12][difficultyScale[d]-1]);
     const share = tidy(randStep(1200, [3500, 5500, 7500][difficultyScale[d]-1], 25) / 100);
     const bill = tidy(people * share);
     const suggested = tidy(share + pick([-1, 0, 1]) * randStep(25, 150, 25) / 100);
     const correct = suggested === share;
-    return question(`${people} friends share a restaurant bill of ${money(bill)} equally. One person thinks each friend should pay ${money(suggested)}. Is this correct?`, `${correct ? "Yes" : "No"}; each should pay ${money(share)}`, `${money(bill)} ÷ ${people} = ${money(share)}. Compare this with ${money(suggested)}.`, {
+    const scenario = styleAt([
+      `${people} friends share a restaurant bill of ${money(bill)} equally.`,
+      `${people} learners share the cost of a taxi, which is ${money(bill)} in total.`,
+      `${people} people split the cost of tickets costing ${money(bill)} altogether.`,
+      `${people} colleagues share a lunch order costing ${money(bill)}.`
+    ], index);
+    return question(`${scenario} One person thinks each person should pay ${money(suggested)}. Is this correct?`, `${correct ? "Yes" : "No"}; each should pay ${money(share)}`, `${money(bill)} ÷ ${people} = ${money(share)}. Compare this with ${money(suggested)}.`, {
       marks: 3,
-      responseSize: "medium"
+      responseSize: "medium",
+      styleId: `shared-bill-${index % 4}`
     });
   }},
-  bestBuys: { group: "Money", label: "Best buys", make: () => {
+  bestBuys: { group: "Money", label: "Best buys", make: (d, index = 0) => {
     const qtyA = pick([4,5,6]), priceA = tidy(randInt(350, 850)/100), qtyB = qtyA+pick([2,3,4]), priceB = tidy(randInt(Math.ceil(priceA*100), Math.ceil(priceA*180))/100), unitA=priceA/qtyA, unitB=priceB/qtyB;
-    return question(`Pack A contains ${qtyA} items for ${money(priceA)}. Pack B contains ${qtyB} items for ${money(priceB)}. Which is the better buy?`, unitA < unitB ? "Pack A" : "Pack B", `Pack A: ${money(priceA)} ÷ ${qtyA} = ${money(unitA)} each. Pack B: ${money(priceB)} ÷ ${qtyB} = ${money(unitB)} each. ${unitA < unitB ? "Pack A" : "Pack B"} has the lower unit price.`);
+    const item = styleAt(["batteries", "tins of soup", "bottles of water", "exercise books", "snack bars"], index);
+    return question(`Pack A contains ${qtyA} ${item} for ${money(priceA)}. Pack B contains ${qtyB} ${item} for ${money(priceB)}. Which is the better buy?`, unitA < unitB ? "Pack A" : "Pack B", `Pack A: ${money(priceA)} ÷ ${qtyA} = ${money(unitA)} each. Pack B: ${money(priceB)} ÷ ${qtyB} = ${money(unitB)} each. ${unitA < unitB ? "Pack A" : "Pack B"} has the lower unit price.`, { styleId: `best-buy-${index % 5}` });
   }},
-  profit: { group: "Money", label: "Profit & loss", make: d => {
+  profit: { group: "Money", label: "Profit & loss", make: (d, index = 0) => {
     const cost = randInt(5, [20, 50, 100][difficultyScale[d]-1])*5, selling = cost + randInt(-Math.floor(cost/4), Math.floor(cost/2)), diff=selling-cost;
-    return question(`A trader buys an item for ${money(cost)} and sells it for ${money(selling)}. State the profit or loss.`, `${diff >= 0 ? "Profit" : "Loss"} of ${money(Math.abs(diff))}`, `${money(selling)} − ${money(cost)} = ${money(diff)}. This is a ${diff >= 0 ? "profit" : "loss"} of ${money(Math.abs(diff))}.`);
+    const item = styleAt(["bike", "phone", "set of tools", "market stall item", "piece of furniture"], index);
+    return question(`A trader buys a ${item} for ${money(cost)} and sells it for ${money(selling)}. State the profit or loss.`, `${diff >= 0 ? "Profit" : "Loss"} of ${money(Math.abs(diff))}`, `${money(selling)} − ${money(cost)} = ${signedMoney(diff)}. This is a ${diff >= 0 ? "profit" : "loss"} of ${money(Math.abs(diff))}.`, { styleId: `profit-${index % 5}` });
   }},
-  simpleInterest: { group: "Money", label: "Simple interest", make: d => {
+  simpleInterest: { group: "Money", label: "Simple interest", make: (d, index = 0) => {
     const principal = randStep(200, [1000, 5000, 20000][difficultyScale[d]-1], 10);
     const rate = pick([2, 3, 4, 5, 6]);
     const years = randInt(1, [1, 3, 5][difficultyScale[d]-1]);
     const interest = principal * rate / 100 * years;
     const final = principal + interest;
-    return question(`A savings account contains ${money(principal)} and pays ${rate}% simple interest per year. How much will be in the account after ${years} ${years === 1 ? "year" : "years"}?`, money(final), `Interest = ${rate}% of ${money(principal)} × ${years} = ${money(interest)}. Final amount = ${money(principal)} + ${money(interest)} = ${money(final)}.`, {
+    const text = styleAt([
+      `A savings account contains ${money(principal)} and pays ${rate}% simple interest per year. How much will be in the account after ${years} ${years === 1 ? "year" : "years"}?`,
+      `${pick(contextNames)} invests ${money(principal)} at ${rate}% simple interest each year. What is the value after ${years} ${years === 1 ? "year" : "years"}?`,
+      `A credit union pays ${rate}% simple interest per year on ${money(principal)}. Calculate the total after ${years} ${years === 1 ? "year" : "years"}.`,
+      `An account starts with ${money(principal)}. It earns ${rate}% simple interest each year for ${years} ${years === 1 ? "year" : "years"}. Work out the final amount.`
+    ], index);
+    return question(text, money(final), `Interest = ${rate}% of ${money(principal)} × ${years} = ${money(interest)}. Final amount = ${money(principal)} + ${money(interest)} = ${money(final)}.`, {
       marks: 3,
-      responseSize: "medium"
+      responseSize: "medium",
+      styleId: `simple-interest-${index % 4}`
     });
   }},
   time: { group: "Time", label: "Duration & clocks", make: (d, index = 0) => {
@@ -265,9 +369,15 @@ const topics = {
     const startTime = formatClock(startH * 60 + startM), finishTime = formatClock(total);
     return question(`A ${activity} starts at ${startTime} and lasts ${duration} minutes. What time does it finish?`, finishTime, `Add ${duration} minutes to ${startTime}. The finish time is ${finishTime}.`, { styleId: `time-${index % 5}` });
   }},
-  conversions: { group: "Measures", label: "Metric conversions", make: d => {
+  conversions: { group: "Measures", label: "Metric conversions", make: (d, index = 0) => {
     const type=pick(["length","weight","capacity"]), units={length:["m","cm",100],weight:["kg","g",1000],capacity:["litres","ml",1000]}[type], value=randInt(2,[10,25,50][difficultyScale[d]-1]);
-    return question(`Convert ${value} ${units[0]} into ${units[1]}.`, `${value*units[2]} ${units[1]}`, `${value} × ${units[2]} = ${value*units[2]} ${units[1]}.`);
+    const text = styleAt([
+      `Convert ${value} ${units[0]} into ${units[1]}.`,
+      `A label shows ${value} ${units[0]}. Write this in ${units[1]}.`,
+      `A measurement is ${value} ${units[0]}. Convert it to ${units[1]}.`,
+      `For a stock sheet, change ${value} ${units[0]} into ${units[1]}.`
+    ], index);
+    return question(text, `${value*units[2]} ${units[1]}`, `${value} × ${units[2]} = ${value*units[2]} ${units[1]}.`, { styleId: `conversions-${index % 4}` });
   }},
   perimeter: { group: "Geometry", label: "Perimeter", make: (d, index = 0) => {
     const l=randInt(3,[12,25,50][difficultyScale[d]-1]),w=randInt(2,l);
@@ -279,54 +389,90 @@ const topics = {
     const place = styleAt(["floor", "garden", "wall", "playing field", "patio"], index);
     return question(`A rectangular ${place} is ${l} m by ${w} m. What is its area?`, `${l*w} m²`, `Area = length × width = ${l} × ${w} = ${l*w} m².`, { styleId: `area-${index % 5}` });
   }},
-  volume: { group: "Geometry", label: "Volume", make: d => {
+  volume: { group: "Geometry", label: "Volume", make: (d, index = 0) => {
     const l=randInt(2,[6,10,15][difficultyScale[d]-1]),w=randInt(2,l),h=randInt(2,[6,10,15][difficultyScale[d]-1]);
-    return question(`A cuboid container measures ${l} cm by ${w} cm by ${h} cm. What is its volume?`, `${l*w*h} cm³`, `Volume = ${l} × ${w} × ${h} = ${l*w*h} cm³.`);
+    const item = styleAt(["container", "gift box", "storage crate", "fish tank", "parcel"], index);
+    return question(`A cuboid ${item} measures ${l} cm by ${w} cm by ${h} cm. What is its volume?`, `${l*w*h} cm³`, `Volume = ${l} × ${w} × ${h} = ${l*w*h} cm³.`, { styleId: `volume-${index % 5}` });
   }},
-  angles: { group: "Geometry", label: "Angles", make: d => {
+  angles: { group: "Geometry", label: "Angles", make: (d, index = 0) => {
     const total=pick([90,180,360]), a=randInt(10,total-20), b=d==="Easy" ? null : randInt(10,total-a-10), missing=total-a-(b||0);
-    return question(`Angles ${a}°${b ? `, ${b}°` : ""} and x add up to ${total}°. Find x.`, `${missing}°`, `x = ${total}° − ${a}°${b ? ` − ${b}°` : ""} = ${missing}°.`);
+    const text = styleAt([
+      `Angles ${a}°${b ? `, ${b}°` : ""} and x add up to ${total}°. Find x.`,
+      `In a diagram, angles ${a}°${b ? ` and ${b}°` : ""} are shown. The total is ${total}°. Work out the missing angle x.`,
+      `A set of angles has a total of ${total}°. The known angles are ${a}°${b ? ` and ${b}°` : ""}. Find the missing angle.`,
+      `Calculate x when ${a}°${b ? ` + ${b}°` : ""} + x = ${total}°.`
+    ], index);
+    return question(text, `${missing}°`, `x = ${total}° − ${a}°${b ? ` − ${b}°` : ""} = ${missing}°.`, { styleId: `angles-${index % 4}` });
   }},
-  averages: { group: "Statistics", label: "Mean, median, mode & range", make: d => {
+  averages: { group: "Statistics", label: "Mean, median, mode & range", make: (d, index = 0) => {
     const type=pick(["mean","median","range"]), count=d==="Easy"?5:7, nums=Array.from({length:count},()=>randInt(2,[12,25,50][difficultyScale[d]-1])).sort((a,b)=>a-b);
-    if(type==="mean"){ const sum=nums.reduce((a,b)=>a+b,0); nums[nums.length-1]+= (count-(sum%count))%count; const s=nums.reduce((a,b)=>a+b,0); return question(`Find the mean of: ${nums.join(", ")}.`, s/count, `Total = ${s}. There are ${count} values. ${s} ÷ ${count} = ${s/count}.`);}
-    if(type==="median") return question(`Find the median of: ${nums.join(", ")}.`, nums[Math.floor(count/2)], `The values are in order. The middle value is ${nums[Math.floor(count/2)]}.`);
-    return question(`Find the range of: ${nums.join(", ")}.`, nums[count-1]-nums[0], `Range = highest − lowest = ${nums[count-1]} − ${nums[0]} = ${nums[count-1]-nums[0]}.`);
+    const context = styleAt(["scores", "daily totals", "delivery counts", "temperatures"], index);
+    if(type==="mean"){ const sum=nums.reduce((a,b)=>a+b,0); nums[nums.length-1]+= (count-(sum%count))%count; const s=nums.reduce((a,b)=>a+b,0); return question(`Find the mean of these ${context}: ${nums.join(", ")}.`, s/count, `Total = ${s}. There are ${count} values. ${s} ÷ ${count} = ${s/count}.`, { styleId: `averages-mean-${index % 4}` });}
+    if(type==="median") return question(`Find the median of these ${context}: ${nums.join(", ")}.`, nums[Math.floor(count/2)], `The values are in order. The middle value is ${nums[Math.floor(count/2)]}.`, { styleId: `averages-median-${index % 4}` });
+    return question(`Find the range of these ${context}: ${nums.join(", ")}.`, nums[count-1]-nums[0], `Range = highest − lowest = ${nums[count-1]} − ${nums[0]} = ${nums[count-1]-nums[0]}.`, { styleId: `averages-range-${index % 4}` });
   }},
-  probability: { group: "Probability", label: "Basic probability", make: d => {
+  probability: { group: "Probability", label: "Basic probability", make: (d, index = 0) => {
     const red=randInt(1,[5,10,20][difficultyScale[d]-1]),blue=randInt(1,[5,10,20][difficultyScale[d]-1]),total=red+blue;
-    return question(`A bag contains ${red} red counters and ${blue} blue counters. What is the probability of choosing a red counter?`, simplify(red,total), `There are ${total} counters altogether. Probability = red ÷ total = ${red}/${total} = ${simplify(red,total)}.`);
+    const contexts = [
+      { text: `A bag contains ${red} red counters and ${blue} blue counters. What is the probability of choosing a red counter?`, item: "red" },
+      { text: `A box contains ${red} winning tickets and ${blue} non-winning tickets. What is the probability of choosing a winning ticket?`, item: "winning" },
+      { text: `A jar contains ${red} blue tokens and ${blue} green tokens. What is the probability of choosing a blue token?`, item: "blue" },
+      { text: `A pile contains ${red} labelled cards and ${blue} blank cards. What is the probability of choosing a labelled card?`, item: "labelled" }
+    ];
+    const scenario = styleAt(contexts, index);
+    return question(scenario.text, simplify(red,total), `There are ${total} items altogether. Probability = favourable outcomes ÷ total = ${red}/${total} = ${simplify(red,total)}.`, { styleId: `probability-${index % contexts.length}` });
   }},
-  probabilityScale: { group: "Probability", label: "Probability scale", make: () => {
+  probabilityScale: { group: "Probability", label: "Probability scale", make: (d, index = 0) => {
     const favourable = pick([1, 2, 3, 4, 5]);
     const answer = simplify(favourable, 6);
-    return question(`A fair dice is rolled. A player wins if it lands on one of ${favourable} winning numbers. What is the probability of winning? Show where this belongs on the probability scale.`, answer, `There are ${favourable} winning outcomes out of 6 equally likely outcomes, so the probability is ${favourable}/6 = ${answer}.`, {
+    const text = styleAt([
+      `A fair dice is rolled. A player wins if it lands on one of ${favourable} winning numbers. What is the probability of winning? Show where this belongs on the probability scale.`,
+      `A quiz has 6 equally likely question cards. ${favourable} cards are bonus cards. What is the probability of choosing a bonus card? Show where this belongs on the probability scale.`,
+      `A spinner has 6 equal sections. ${favourable} sections are shaded. What is the probability of landing on a shaded section? Show where this belongs on the probability scale.`,
+      `A bag has 6 equally likely tokens. ${favourable} tokens win a prize. What is the probability of winning? Show where this belongs on the probability scale.`
+    ], index);
+    return question(text, answer, `There are ${favourable} favourable outcomes out of 6 equally likely outcomes, so the probability is ${favourable}/6 = ${answer}.`, {
       marks: 2,
       responseSize: "medium",
+      styleId: `probability-scale-${index % 4}`,
       visual: `<div class="probability-scale"><span>Impossible<br>0</span><i></i><span>Even chance<br>1/2</span><i></i><span>Certain<br>1</span></div>`
     });
   }},
-  fractionConversionTable: { group: "Fractions", label: "Fraction, decimal & percentage", make: () => {
-    const options = [[1,2],[1,4],[3,4],[1,5],[2,5]], [n,d] = pick(options), decimal = n/d, percentage = decimal*100;
-    return question(`Complete the table to show this fraction as a decimal and a percentage.`, `${decimal} and ${percentage}%`, `${n} ÷ ${d} = ${decimal}. Multiply the decimal by 100 to get ${percentage}%.`, {
-      marks: 2, responseSize: "small", visual: `<table class="data-table conversion-table"><thead><tr><th>Fraction</th><th>Decimal</th><th>Percentage</th></tr></thead><tbody><tr><td>${n}/${d}</td><td class="blank-cell"></td><td class="blank-cell"></td></tr></tbody></table>`
+  fractionConversionTable: { group: "Fractions", label: "Fraction, decimal & percentage", make: (difficulty, index = 0) => {
+    const options = [[1,2],[1,4],[3,4],[1,5],[2,5]], [n, den] = pick(options), decimal = n/den, percentage = decimal*100;
+    const text = styleAt([
+      `Complete the table to show this fraction as a decimal and a percentage.`,
+      `Fill in the missing decimal and percentage for this fraction.`,
+      `A learner starts a conversion table. Complete the missing entries.`,
+      `Convert the fraction in the table into a decimal and a percentage.`
+    ], index);
+    return question(text, `${decimal} and ${percentage}%`, `${n} ÷ ${den} = ${decimal}. Multiply the decimal by 100 to get ${percentage}%.`, {
+      marks: 2, responseSize: "small", styleId: `fraction-conversion-${index % 4}`, visual: `<table class="data-table conversion-table"><thead><tr><th>Fraction</th><th>Decimal</th><th>Percentage</th></tr></thead><tbody><tr><td>${n}/${den}</td><td class="blank-cell"></td><td class="blank-cell"></td></tr></tbody></table>`
     });
   }},
-  salesTable: { group: "Statistics", label: "Reading and ordering a table", make: d => {
-    const months = ["January","February","March","April","May"], values = [];
-    while (values.length < months.length) {
+  salesTable: { group: "Statistics", label: "Reading and ordering a table", make: (d, index = 0) => {
+    const headings = styleAt([
+      ["January","February","March","April","May"],
+      ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+      ["Shop A","Shop B","Shop C","Shop D","Shop E"],
+      ["Week 1","Week 2","Week 3","Week 4","Week 5"]
+    ], index);
+    const context = styleAt(["sales", "takings", "donations", "fundraising totals"], index);
+    const values = [];
+    while (values.length < headings.length) {
       const value = randInt(35, [90,160,250][difficultyScale[d]-1])*100;
       if (!values.includes(value)) values.push(value);
     }
     const highest = Math.max(...values), lowest = Math.min(...values);
-    return question(`Use the sales table to answer both questions.`, `${months[values.indexOf(highest)]}; ${money(highest-lowest)}`, `The highest value is ${money(highest)}, in ${months[values.indexOf(highest)]}. Range = ${money(highest)} − ${money(lowest)} = ${money(highest-lowest)}.`, {
+    return question(`Use the ${context} table to answer both questions.`, `${headings[values.indexOf(highest)]}; ${money(highest-lowest)}`, `The highest value is ${money(highest)}, in ${headings[values.indexOf(highest)]}. Range = ${money(highest)} − ${money(lowest)} = ${money(highest-lowest)}.`, {
       marks: 3, responseSize: "medium",
-      visual: `<table class="data-table"><thead><tr>${months.map(m => `<th>${m.slice(0,3)}</th>`).join("")}</tr></thead><tbody><tr>${values.map(v => `<td>${money(v)}</td>`).join("")}</tr></tbody></table>`,
-      parts: [`a) Which month had the highest sales?`, `b) What is the range of the sales figures?`],
+      styleId: `sales-table-${index % 4}`,
+      visual: `<table class="data-table"><thead><tr>${headings.map(m => `<th>${m.slice(0,6)}</th>`).join("")}</tr></thead><tbody><tr>${values.map(v => `<td>${money(v)}</td>`).join("")}</tr></tbody></table>`,
+      parts: [`a) Which heading has the highest value?`, `b) What is the range of the figures?`],
       quality: { uniqueValues: true, values }
     });
   }},
-  reviewSummaryTable: { group: "Statistics", label: "Complete a summary table", make: () => {
+  reviewSummaryTable: { group: "Statistics", label: "Complete a summary table", make: (d, index = 0) => {
     const total = pick([100, 200, 250]);
     const excellentPct = pick([20, 25, 30, 40, 45]);
     const excellent = total * excellentPct / 100;
@@ -334,13 +480,15 @@ const topics = {
     const average = total - excellent - good;
     const goodPct = good / total * 100;
     const averagePct = average / total * 100;
-    return question(`A website received ${total} reviews for a new product. ${excellentPct}% rated it excellent. ${good} rated it good. The remainder rated it average. Complete the summary table.`, `Excellent: ${excellent}; Good: ${goodPct}%; Average: ${average} and ${averagePct}%`, `Excellent score = ${excellentPct}% of ${total} = ${excellent}. Average score = ${total} - ${excellent} - ${good} = ${average}. Good percentage = ${good}/${total} × 100 = ${goodPct}%. Average percentage = ${average}/${total} × 100 = ${averagePct}%.`, {
+    const subject = styleAt(["a new product", "a training course", "a customer service survey", "a college event"], index);
+    return question(`A website received ${total} reviews for ${subject}. ${excellentPct}% rated it excellent. ${good} rated it good. The remainder rated it average. Complete the summary table.`, `Excellent: ${excellent}; Good: ${goodPct}%; Average: ${average} and ${averagePct}%`, `Excellent score = ${excellentPct}% of ${total} = ${excellent}. Average score = ${total} - ${excellent} - ${good} = ${average}. Good percentage = ${good}/${total} × 100 = ${goodPct}%. Average percentage = ${average}/${total} × 100 = ${averagePct}%.`, {
       marks: 3,
       responseSize: "large",
+      styleId: `review-summary-${index % 4}`,
       visual: `<table class="data-table"><thead><tr><th>Rating</th><th>Score</th><th>Percentage</th></tr></thead><tbody><tr><td>Excellent</td><td class="blank-cell"></td><td>${excellentPct}%</td></tr><tr><td>Good</td><td>${good}</td><td class="blank-cell"></td></tr><tr><td>Average</td><td class="blank-cell"></td><td class="blank-cell"></td></tr></tbody></table>`
     });
   }},
-  meanRangeCompare: { group: "Statistics", label: "Mean and range comparison", make: d => {
+  meanRangeCompare: { group: "Statistics", label: "Mean and range comparison", make: (d, index = 0) => {
     const count = 7;
     const values = Array.from({ length: count }, () => randInt(10, [80, 180, 260][difficultyScale[d]-1])).sort((a,b)=>a-b);
     const sum = values.reduce((a,b)=>a+b,0);
@@ -353,36 +501,47 @@ const topics = {
     const oldRange = Math.max(5, range + pick([-15, -10, 10, 15]));
     const meanClaim = mean < oldMean;
     const rangeClaim = range < oldRange;
-    return question(`A learner records these figures over seven days: ${values.join("  ")}. Last year the mean was ${oldMean} and the range was ${oldRange}. They think both the mean and range are lower this year. Are they correct?`, `${meanClaim && rangeClaim ? "Yes" : "No"}; mean ${mean}, range ${range}`, `Mean = ${total} ÷ ${count} = ${mean}. Range = ${values[count-1]} - ${values[0]} = ${range}. Compare these with last year's mean of ${oldMean} and range of ${oldRange}.`, {
+    const context = styleAt([
+      `A learner records these study times over seven days`,
+      `A cafe records the number of lunches sold each day for seven days`,
+      `A sports club records attendance at seven sessions`,
+      `A delivery team records the number of parcels delivered over seven days`
+    ], index);
+    return question(`${context}: ${values.join("  ")}. Last year the mean was ${oldMean} and the range was ${oldRange}. They think both the mean and range are lower this year. Are they correct?`, `${meanClaim && rangeClaim ? "Yes" : "No"}; mean ${mean}, range ${range}`, `Mean = ${total} ÷ ${count} = ${mean}. Range = ${values[count-1]} - ${values[0]} = ${range}. Compare these with last year's mean of ${oldMean} and range of ${oldRange}.`, {
       marks: 3,
       responseSize: "large",
+      styleId: `mean-range-${index % 4}`,
       parts: ["Calculate this year's mean.", "Calculate this year's range.", "State whether the claim is correct."]
     });
   }},
-  mixedWeights: { group: "Measures", label: "Mixed-unit total", make: d => {
+  mixedWeights: { group: "Measures", label: "Mixed-unit total", make: (d, index = 0) => {
     const grams = [randStep(250,900,10), randStep(300,950,10), randStep(400,1200,10)], kilos = [tidy(randInt(4,[12,20,30][difficultyScale[d]-1])/10), tidy(randInt(5,18)/10)];
     const totalG = grams.reduce((a,b)=>a+b,0) + kilos.reduce((a,b)=>a+b,0)*1000;
-    return question(`These parcels need to be loaded into a van. Calculate their total weight. Give your answer in kilograms.`, `${tidy(totalG/1000)} kg`, `${grams.join(" g + ")} g, plus ${kilos.join(" kg + ")} kg. Convert all values to kilograms and add them: ${tidy(totalG/1000)} kg.`, {
-      marks: 3, responseSize: "large", visual: `<div class="value-cards">${[...grams.map(v=>`${v} g`),...kilos.map(v=>`${v} kg`)].map(v=>`<span>${v}</span>`).join("")}</div>`,
+    const item = styleAt(["parcels loaded into a van", "bags packed for a trip", "ingredients used in a recipe", "items placed on a shelf"], index);
+    return question(`These ${item} have the weights shown. Calculate their total weight. Give your answer in kilograms.`, `${tidy(totalG/1000)} kg`, `${grams.join(" g + ")} g, plus ${kilos.join(" kg + ")} kg. Convert all values to kilograms and add them: ${tidy(totalG/1000)} kg.`, {
+      marks: 3, responseSize: "large", styleId: `mixed-weights-${index % 4}`, visual: `<div class="value-cards">${[...grams.map(v=>`${v} g`),...kilos.map(v=>`${v} kg`)].map(v=>`<span>${v}</span>`).join("")}</div>`,
       quality: { hundredths: true, value: totalG/1000 }
     });
   }},
-  compareServices: { group: "Money", label: "Compare service costs", make: d => {
+  compareServices: { group: "Money", label: "Compare service costs", make: (d, index = 0) => {
     const length=randInt(20,[40,70,100][difficultyScale[d]-1]), width=randInt(10,[25,45,60][difficultyScale[d]-1]), area=length*width;
     const rate=pick([3,4,5,6,7,8]), variable=area*rate/100, direction=variable > 30 ? pick([-1,1]) : 1, difference=randInt(3,Math.max(3,Math.floor(variable*0.3))), fixed=tidy(variable + direction*difference), cheaper=fixed<variable?"Clear Cut":"Green Team";
-    return question(`A community group needs this rectangular field maintained. Which company is cheaper? Show enough working to support your decision.`, `${cheaper} (${money(Math.min(fixed,variable))})`, `Area = ${length} × ${width} = ${area} m². Green Team costs ${area} × ${rate}p = ${money(variable)}. Clear Cut costs ${money(fixed)}. Therefore ${cheaper} is cheaper.`, {
+    const job = styleAt(["rectangular field maintained", "community garden cleared", "hall floor cleaned", "patio pressure washed"], index);
+    return question(`A community group needs this ${job}. Which company is cheaper? Show enough working to support your decision.`, `${cheaper} (${money(Math.min(fixed,variable))})`, `Area = ${length} × ${width} = ${area} m². Green Team costs ${area} × ${rate}p = ${money(variable)}. Clear Cut costs ${money(fixed)}. Therefore ${cheaper} is cheaper.`, {
       marks: 5, responseSize: "large",
-      visual: `<div class="comparison-layout"><div class="diagram-card"><strong>Field</strong><span>${length} m × ${width} m</span></div><div class="quote-card"><strong>Clear Cut</strong><span>Fixed price ${money(fixed)}</span></div><div class="quote-card"><strong>Green Team</strong><span>${rate}p per square metre</span></div></div>`
+      styleId: `compare-services-${index % 4}`,
+      visual: `<div class="comparison-layout"><div class="diagram-card"><strong>Area</strong><span>${length} m × ${width} m</span></div><div class="quote-card"><strong>Clear Cut</strong><span>Fixed price ${money(fixed)}</span></div><div class="quote-card"><strong>Green Team</strong><span>${rate}p per square metre</span></div></div>`
     });
   }},
-  journeyFormula: { group: "Time", label: "Formula and journey time", make: d => {
+  journeyFormula: { group: "Time", label: "Formula and journey time", make: (d, index = 0) => {
     const distance=randInt(4,[10,20,35][difficultyScale[d]-1])*10, speed=pick([30,40,50,60]), stops=randInt(1,4), stopMinutes=pick([10,15,20]), travelMinutes=distance/speed*60, startH=randInt(7,12), total=startH*60+travelMinutes+stops*stopMinutes, endH=Math.floor(total/60), endM=total%60;
     const startTime = formatClock(startH * 60), finishTime = formatClock(total);
-    return question(`A delivery driver travels ${distance} miles at an average speed of ${speed} mph and makes ${stops} stops of ${stopMinutes} minutes each. The driver leaves at ${startTime}. What time will the driver finish?`, finishTime, `Travel time = ${distance} ÷ ${speed} = ${distance/speed} hours (${travelMinutes} minutes). Stops take ${stops} × ${stopMinutes} = ${stops*stopMinutes} minutes. Total time = ${travelMinutes+stops*stopMinutes} minutes, so the finish time is ${finishTime}.`, {
-      marks: 5, responseSize: "large", visual: `<div class="formula-box"><strong>Use the formula</strong><span>time = distance ÷ average speed</span></div>`
+    const traveller = styleAt(["delivery driver", "courier", "minibus driver", "support worker"], index);
+    return question(`A ${traveller} travels ${distance} miles at an average speed of ${speed} mph and makes ${stops} stops of ${stopMinutes} minutes each. They leave at ${startTime}. What time will they finish?`, finishTime, `Travel time = ${distance} ÷ ${speed} = ${distance/speed} hours (${travelMinutes} minutes). Stops take ${stops} × ${stopMinutes} = ${stops*stopMinutes} minutes. Total time = ${travelMinutes+stops*stopMinutes} minutes, so the finish time is ${finishTime}.`, {
+      marks: 5, responseSize: "large", styleId: `journey-formula-${index % 4}`, visual: `<div class="formula-box"><strong>Use the formula</strong><span>time = distance ÷ average speed</span></div>`
     });
   }},
-  cookingFormula: { group: "Time", label: "Cooking formula time", make: d => {
+  cookingFormula: { group: "Time", label: "Cooking formula time", make: (d, index = 0) => {
     const people = randInt(6, [12, 20, 30][difficultyScale[d]-1]);
     const gramsEach = pick([100, 125, 150, 175, 200]);
     const weightKg = tidy(people * gramsEach / 1000);
@@ -390,25 +549,41 @@ const topics = {
     const readyTime = formatClock(randInt(12, 18) * 60);
     const readyMinutes = parseInt(readyTime.split(":")[0], 10) % 12 * 60 + (readyTime.endsWith("pm") ? 12 * 60 : 0);
     const startTime = formatClock(readyMinutes - cookingMinutes);
-    return question(`${pick(contextNames)} is cooking for ${people} people. Each person will have ${gramsEach}g of meat. Use the formula to work out the cooking time, then find the start time if the food needs to be ready at ${readyTime}.`, `${cookingMinutes} minutes; start at ${startTime}`, `Total weight = ${people} × ${gramsEach}g = ${people*gramsEach}g = ${weightKg}kg. Cooking time = ${weightKg} × 40 + 15 = ${cookingMinutes} minutes. Count back ${cookingMinutes} minutes from ${readyTime}: ${startTime}.`, {
+    const food = styleAt(["meat", "vegetarian roast", "joint of beef", "tray bake"], index);
+    return question(`${pick(contextNames)} is cooking for ${people} people. Each person will have ${gramsEach}g of ${food}. Use the formula to work out the cooking time, then find the start time if the food needs to be ready at ${readyTime}.`, `${cookingMinutes} minutes; start at ${startTime}`, `Total weight = ${people} × ${gramsEach}g = ${people*gramsEach}g = ${weightKg}kg. Cooking time = ${weightKg} × 40 + 15 = ${cookingMinutes} minutes. Count back ${cookingMinutes} minutes from ${readyTime}: ${startTime}.`, {
       marks: 5,
       responseSize: "large",
+      styleId: `cooking-formula-${index % 4}`,
       visual: `<div class="formula-box"><strong>Use the formula</strong><span>cooking time in minutes = weight in kg × 40 + 15</span></div>`,
       parts: ["Calculate the cooking time.", "What time should cooking start?"]
     });
   }},
-  probabilityParts: { group: "Probability", label: "Probability with explanation", make: () => {
+  probabilityParts: { group: "Probability", label: "Probability with explanation", make: (d, index = 0) => {
     const mostLikely=randInt(1,5), otherValues=[1,2,3,4,5].filter(value=>value!==mostLikely), extras=[...otherValues].sort(()=>Math.random()-0.5).slice(0,2), values=[mostLikely,mostLikely,mostLikely,mostLikely,...otherValues,...extras].sort(()=>Math.random()-0.5), target=pick(values), count=values.filter(v=>v===target).length;
-    return question(`A spinner has ten equal sections labelled as shown. Answer both questions.`, `${simplify(count,10)}; ${mostLikely}`, `The number ${target} appears ${count} times out of 10, so its probability is ${simplify(count,10)}. The number ${mostLikely} appears most often, so it has the highest probability.`, {
+    const context = styleAt([
+      `A spinner has ten equal sections labelled as shown. Answer both questions.`,
+      `A game spinner has ten equal sections labelled as shown. Answer both questions.`,
+      `A prize wheel has ten equal sections labelled as shown. Answer both questions.`,
+      `A classroom spinner has ten equal sections labelled as shown. Answer both questions.`
+    ], index);
+    return question(context, `${simplify(count,10)}; ${mostLikely}`, `The number ${target} appears ${count} times out of 10, so its probability is ${simplify(count,10)}. The number ${mostLikely} appears most often, so it has the highest probability.`, {
       marks: 4, responseSize: "large", visual: spinnerVisual(values),
+      styleId: `probability-parts-${index % 4}`,
       parts: [`a) What is the probability of landing on ${target}? Give your answer as a fraction in its simplest form.`, `b) Which number has the highest probability? Explain your answer.`],
       quality: { uniqueHighest: true, counts: [1,2,3,4,5].map(value => values.filter(item => item === value).length) }
     });
   }},
-  proportionReliability: { group: "Ratio & proportion", label: "Proportion and reliability", make: d => {
+  proportionReliability: { group: "Ratio & proportion", label: "Proportion and reliability", make: (d, index = 0) => {
     const knownDistance=pick([4,5,6]), minutesPerMile=randInt(6,10), knownMinutes=knownDistance*minutesPerMile, multiplier=pick({Easy:[2],Medium:[2,3],Hard:[3,4,5]}[d]), target=knownDistance*multiplier, estimate=knownMinutes*multiplier;
-    return question(`${pick(contextNames)} takes ${knownMinutes} minutes to travel ${knownDistance} miles by bicycle. Estimate how long it will take to travel ${target} miles. Give one reason why the estimate may be unreliable.`, `${estimate} minutes; speed may change`, `${knownMinutes} ÷ ${knownDistance} = ${knownMinutes/knownDistance} minutes per mile. ${knownMinutes/knownDistance} × ${target} = ${estimate} minutes. The estimate assumes the same speed throughout, but traffic, hills or tiredness could change the speed.`, {
+    const travel = styleAt([
+      { mode: "by bicycle", reason: "traffic, hills or tiredness could change the speed" },
+      { mode: "on a walking route", reason: "weather, rests or steeper sections could change the pace" },
+      { mode: "on a delivery route", reason: "traffic or extra stops could change the speed" },
+      { mode: "on a charity walk", reason: "breaks, terrain or tiredness could change the pace" }
+    ], index);
+    return question(`${pick(contextNames)} takes ${knownMinutes} minutes to travel ${knownDistance} miles ${travel.mode}. Estimate how long it will take to travel ${target} miles. Give one reason why the estimate may be unreliable.`, `${estimate} minutes; speed may change`, `${knownMinutes} ÷ ${knownDistance} = ${knownMinutes/knownDistance} minutes per mile. ${knownMinutes/knownDistance} × ${target} = ${estimate} minutes. The estimate assumes the same speed throughout, but ${travel.reason}.`, {
       marks: 4, responseSize: "large", parts: [`a) Calculate the estimated time.`, `b) Give one reason why this estimate may be unreliable.`],
+      styleId: `proportion-reliability-${index % 4}`,
       quality: { exactScale: true, start: knownDistance, target }
     });
   }}
