@@ -151,6 +151,10 @@ fieldset.field { border: 0; margin-inline: 0; padding: 0; }
 .blank-cell { height: 38px; background: #fafbf9; }
 .value-cards { margin: 16px 0 0 47px; display: flex; flex-wrap: wrap; gap: 7px; }
 .value-cards span { display: grid; place-items: center; min-width: 58px; min-height: 38px; padding: 7px; border: 1px solid #aebbb5; border-radius: 6px; background: #f7f9f7; font-size: 12px; font-weight: bold; }
+.column-subtraction { width: 155px; margin: 16px 0 0 47px; padding: 10px 16px 8px; border: 1px solid #aebbb5; border-radius: 7px; background: #fbfcfa; font-family: "Courier New", monospace; font-size: 24px; line-height: 1.35; font-variant-numeric: tabular-nums; text-align: right; }
+.column-subtraction span, .column-subtraction i { display: block; }
+.column-subtraction .operator { border-bottom: 2px solid #17231f; }
+.column-subtraction i { height: 32px; border-bottom: 1.5px solid #879690; }
 .spinner-visual { width: 220px; margin: 18px auto 8px; }
 .spinner-visual svg { display: block; width: 100%; height: auto; overflow: visible; }
 .spinner-sector { stroke: #80948c; stroke-width: 1.2; }
@@ -171,7 +175,7 @@ fieldset.field { border: 0; margin-inline: 0; padding: 0; }
 .probability-scale i::after { right: 0; }
 .answer-card { margin-bottom: 22px; padding: 20px 21px; border: 1.5px solid #cfdad5; border-radius: 11px; background: white; break-inside: avoid; }
 .answer-card h4 { margin: 4px 0 0; font-size: 13px; line-height: 1.55; }
-.answer-card .data-table, .answer-card .value-cards, .answer-card .comparison-layout, .answer-card .formula-box, .answer-card .probability-scale, .answer-card .question-parts { display: none; }
+.answer-card .data-table, .answer-card .value-cards, .answer-card .column-subtraction, .answer-card .comparison-layout, .answer-card .formula-box, .answer-card .probability-scale, .answer-card .question-parts { display: none; }
 .answer-card .spinner-visual { width: 150px; }
 .answer-card p { margin: 13px 0 0 47px; padding: 12px 14px; border-radius: 7px; font-size: 12px; line-height: 1.6; }
 .answer-card p strong { display: block; margin-bottom: 3px; font-size: 9px; text-transform: uppercase; letter-spacing: .07em; }

@@ -53,6 +53,16 @@ function question(text, answer, solution, extras = {}) {
   return { text, answer: String(answer), solution, marks: 2, responseSize: "medium", ...extras };
 }
 
+function needsRegrouping(minuend, subtrahend) {
+  const top = String(minuend).padStart(5, "0");
+  const bottom = String(subtrahend).padStart(5, "0");
+  return [...top].some((digit, index) => Number(bottom[index]) > Number(digit));
+}
+
+function columnSubtractionVisual(minuend, subtrahend) {
+  return `<div class="column-subtraction" aria-label="${minuend} minus ${subtrahend}"><span>${minuend.toLocaleString()}</span><span class="operator">− ${subtrahend.toLocaleString()}</span><i></i></div>`;
+}
+
 function validateQuestion(item) {
   const quality = item.quality;
   if (!quality) return item;
@@ -61,6 +71,7 @@ function validateQuestion(item) {
   if (quality.uniqueValues && new Set(quality.values).size !== quality.values.length) throw new Error("Question requires unique values.");
   if (quality.uniqueHighest && quality.counts.filter(count => count === Math.max(...quality.counts)).length !== 1) throw new Error("Question requires one clear highest value.");
   if (quality.hundredths && Math.abs(Math.round(quality.value * 100) - quality.value * 100) > 1e-8) throw new Error("Question produced unnecessary decimal precision.");
+  if (quality.regrouping && !needsRegrouping(quality.minuend, quality.subtrahend)) throw new Error("Subtraction drill must require regrouping.");
   return item;
 }
 
@@ -90,6 +101,22 @@ function spinnerVisual(values) {
 }
 
 const topics = {
+  fiveDigitSubtractionRegrouping: { group: "Drills", label: "5-digit subtraction with regrouping", make: (d, index = 0) => {
+    let minuend = randInt(20000, 99999);
+    let subtrahend = randInt(10000, minuend - 1);
+    while (!needsRegrouping(minuend, subtrahend)) {
+      minuend = randInt(20000, 99999);
+      subtrahend = randInt(10000, minuend - 1);
+    }
+    const answer = minuend - subtrahend;
+    return question("Work out this subtraction. Show any regrouping clearly.", answer.toLocaleString(), `${minuend.toLocaleString()} − ${subtrahend.toLocaleString()} = ${answer.toLocaleString()}.`, {
+      marks: 1,
+      responseSize: "small",
+      visual: columnSubtractionVisual(minuend, subtrahend),
+      styleId: `five-digit-subtraction-regrouping-${index % 12}`,
+      quality: { regrouping: true, minuend, subtrahend }
+    });
+  }},
   addition: { group: "Number", label: "Addition", make: (d, index = 0) => {
     const max = [100, 1000, 10000][difficultyScale[d] - 1], a = randInt(max / 5, max), b = randInt(max / 5, max);
     const total = a + b;
@@ -682,6 +709,7 @@ const topics = {
 };
 
 const noCalculatorKeys = new Set([
+  "fiveDigitSubtractionRegrouping",
   "addition", "subtraction", "multiplication", "division", "negatives", "rounding", "orderOperations", "wordToFigures",
   "simplifyFractions", "fractionAmount", "compareFractions", "orderDecimals", "percentages",
   "simplifyRatio", "sharingRatio", "subscriptionCompare", "simpleInterest", "time", "cookingFormula", "conversions", "perimeter", "area", "angles",
