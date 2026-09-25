@@ -248,8 +248,8 @@ footer strong { color: white; font-family: Georgia, serif; font-size: 15px; }
   .drill-paper .student-details span { padding-bottom: 1.5mm; font-size: 7pt; }
   .drill-paper .sheet-instructions { margin-bottom: 3mm; padding: 0; border: 0; background: transparent; font-size: 7pt; line-height: 1.15; }
   .drill-grid { gap: 3mm; grid-template-columns: repeat(3, 1fr); }
-  .drill-question { min-height: 31mm; padding: 3mm 3mm 2mm 7mm; border-color: #999; border-radius: 0; }
+  .drill-question { min-height: 36mm; padding: 4mm 3mm 3mm 7mm; border-color: #999; border-radius: 0; }
   .drill-number { top: 2mm; left: 2.5mm; font-size: 7pt; }
   .drill-question .column-subtraction { width: 32mm; padding: 1mm 2mm 1mm; font-size: 16pt; line-height: 1.15; }
-  .drill-question .column-subtraction i { height: 8mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 3.8mm, #e4e9e6 4mm); }
+  .drill-question .column-subtraction i { height: 12mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 3.8mm, #e4e9e6 4mm); }
 }
