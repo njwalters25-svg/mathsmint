@@ -771,6 +771,7 @@ function makeQuestion(key, index = 0) {
   return validateQuestion({
     ...topics[key].make(effectiveDifficulty(state.difficulty, calculatorMode), index),
     topicLabel: topics[key].label,
+    topicGroup: topics[key].group,
     calculatorMode
   });
 }
@@ -877,10 +878,11 @@ function generate() {
 function sheetHeader(answerSheet = false) {
   const topic = state.topicKey === "mixed" ? "Mixed topics" : isGroupMixedKey(state.topicKey) ? `Mixed ${groupFromMixedKey(state.topicKey)} topics` : topics[state.topicKey].label;
   const totalMarks = state.questions.reduce((sum, item) => sum + item.marks, 0);
+  const drillSheet = state.questions.length && state.questions.every(question => question.topicGroup === "Drills");
   return `<div class="sheet-topline"><span class="sheet-brand">MathsMint</span><span class="sheet-level">Functional Skills · Level 1</span></div>
-    <h1 class="sheet-title">${answerSheet ? "Answer sheet" : (state.topicKey === "mixed" || isGroupMixedKey(state.topicKey)) ? "Level 1 practice paper" : topic}</h1>
+    <h1 class="sheet-title">${answerSheet ? "Answer sheet" : drillSheet ? "Skills practice drill" : (state.topicKey === "mixed" || isGroupMixedKey(state.topicKey)) ? "Level 1 practice paper" : topic}</h1>
     <p class="sheet-subtitle">${topic} · ${state.difficulty} · ${state.calculatorMode} · ${state.questions.length} questions · ${totalMarks} marks</p>
-    ${answerSheet ? "" : `<div class="student-details"><span>Name:</span><span>Date:</span></div><p class="sheet-instructions"><strong>${state.calculatorMode === "No calculator" ? "Do not use a calculator." : state.calculatorMode === "Calculator" ? "A calculator may be used." : "Check each question to see whether a calculator may be used."}</strong> Show your working in the space provided and remember to include units where needed.</p>`}`;
+    ${answerSheet ? "" : `<div class="student-details"><span>Name:</span><span>Date:</span></div><p class="sheet-instructions"><strong>${state.calculatorMode === "No calculator" ? "Do not use a calculator." : state.calculatorMode === "Calculator" ? "A calculator may be used." : "Check each question to see whether a calculator may be used."}</strong> ${drillSheet ? "Complete each question carefully. Use the space in each box to show regrouping." : "Show your working in the space provided and remember to include units where needed."}</p>`}`;
 }
 
 function questionBody(q) {
@@ -894,9 +896,16 @@ function answerLines(q) {
 
 function render() {
   const answers = state.view === "answers";
+  const drillSheet = state.questions.length && state.questions.every(question => question.topicGroup === "Drills");
+  els.paper.classList.toggle("drill-paper", drillSheet && !answers);
+  els.paper.classList.toggle("drill-answer-paper", drillSheet && answers);
   els.paper.innerHTML = sheetHeader(answers) + (answers
-    ? state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${formatText(q.text)}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<p class="answer"><strong>Answer</strong>${formatText(q.answer)}</p><p class="solution"><strong>How to work it out</strong>${formatText(q.solution)}</p></section>`).join("")
-    : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
+    ? drillSheet
+      ? `<div class="drill-answer-grid">${state.questions.map((q, i) => `<div><strong>${i + 1}</strong><span>${formatText(q.answer)}</span></div>`).join("")}</div>`
+      : state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${formatText(q.text)}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<p class="answer"><strong>Answer</strong>${formatText(q.answer)}</p><p class="solution"><strong>How to work it out</strong>${formatText(q.solution)}</p></section>`).join("")
+    : drillSheet
+      ? `<div class="drill-grid">${state.questions.map((q, i) => `<section class="drill-question"><span class="drill-number">${i + 1}</span>${questionBody(q)}</section>`).join("")}</div>`
+      : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
   els.detail.textContent = `${state.questions.length} questions · ${state.questions.reduce((sum, item) => sum + item.marks, 0)} marks · ${state.calculatorMode} · ${state.difficulty}`;
   els.printAnswers.hidden = !els.includeAnswers.checked;
 }

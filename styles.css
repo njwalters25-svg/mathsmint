@@ -155,6 +155,15 @@ fieldset.field { border: 0; margin-inline: 0; padding: 0; }
 .column-subtraction span, .column-subtraction i { display: block; }
 .column-subtraction .operator { border-bottom: 2px solid #17231f; }
 .column-subtraction i { height: 32px; border-bottom: 1.5px solid #879690; }
+.drill-paper { padding-inline: 42px; }
+.drill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.drill-question { position: relative; min-height: 150px; padding: 12px 12px 10px 34px; border: 1px solid #c9d2ce; border-radius: 8px; background: white; break-inside: avoid; }
+.drill-number { position: absolute; top: 10px; left: 10px; color: #61716c; font-size: 11px; font-weight: bold; }
+.drill-question .column-subtraction { width: 130px; margin: 0 auto; padding: 4px 12px 6px; border: 0; border-radius: 0; background: transparent; font-size: 22px; }
+.drill-question .column-subtraction i { height: 48px; background: repeating-linear-gradient(to bottom, transparent 0, transparent 15px, #e4e9e6 16px); }
+.drill-answer-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.drill-answer-grid div { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border: 1px solid #c9d2ce; border-radius: 6px; font-size: 12px; }
+.drill-answer-grid span { font-weight: bold; }
 .spinner-visual { width: 220px; margin: 18px auto 8px; }
 .spinner-visual svg { display: block; width: 100%; height: auto; overflow: visible; }
 .spinner-sector { stroke: #80948c; stroke-width: 1.2; }
@@ -230,4 +239,13 @@ footer strong { color: white; font-family: Georgia, serif; font-size: 15px; }
   .question { margin-bottom: 7mm; padding: 6mm; }
   .working-lines { height: 25mm; }
   .working-area.large .working-lines { height: 38mm; }
+  .drill-paper .sheet-title { margin-top: 10mm; font-size: 24pt; }
+  .drill-paper .sheet-subtitle { margin-bottom: 8mm; }
+  .drill-paper .student-details { margin-bottom: 6mm; }
+  .drill-paper .sheet-instructions { margin-bottom: 8mm; padding: 0; border: 0; background: transparent; }
+  .drill-grid { gap: 5mm; grid-template-columns: repeat(2, 1fr); }
+  .drill-question { min-height: 39mm; padding: 4mm 4mm 3mm 10mm; border-color: #999; border-radius: 0; }
+  .drill-number { top: 4mm; left: 4mm; }
+  .drill-question .column-subtraction { width: 34mm; font-size: 18pt; }
+  .drill-question .column-subtraction i { height: 12mm; }
 }
