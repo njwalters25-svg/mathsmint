@@ -101,6 +101,22 @@ function spinnerVisual(values) {
 }
 
 const topics = {
+  threeDigitSubtractionRegrouping: { group: "Drills", label: "3-digit subtraction with borrowing", make: (d, index = 0) => {
+    let minuend = randInt(200, 999);
+    let subtrahend = randInt(100, minuend - 1);
+    while (!needsRegrouping(minuend, subtrahend)) {
+      minuend = randInt(200, 999);
+      subtrahend = randInt(100, minuend - 1);
+    }
+    const answer = minuend - subtrahend;
+    return question("Work out this subtraction. Show any borrowing clearly.", answer.toLocaleString(), `${minuend.toLocaleString()} − ${subtrahend.toLocaleString()} = ${answer.toLocaleString()}.`, {
+      marks: 1,
+      responseSize: "small",
+      visual: columnSubtractionVisual(minuend, subtrahend),
+      styleId: `three-digit-subtraction-regrouping-${index % 12}`,
+      quality: { regrouping: true, minuend, subtrahend }
+    });
+  }},
   fiveDigitSubtractionRegrouping: { group: "Drills", label: "5-digit subtraction with regrouping", make: (d, index = 0) => {
     let minuend = randInt(20000, 99999);
     let subtrahend = randInt(10000, minuend - 1);
@@ -709,6 +725,7 @@ const topics = {
 };
 
 const noCalculatorKeys = new Set([
+  "threeDigitSubtractionRegrouping",
   "fiveDigitSubtractionRegrouping",
   "addition", "subtraction", "multiplication", "division", "negatives", "rounding", "orderOperations", "wordToFigures",
   "simplifyFractions", "fractionAmount", "compareFractions", "orderDecimals", "percentages",
