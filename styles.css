@@ -155,8 +155,8 @@ fieldset.field { border: 0; margin-inline: 0; padding: 0; }
 .column-subtraction span, .column-subtraction i { display: block; }
 .column-subtraction .operator { border-bottom: 2px solid #17231f; }
 .column-subtraction i { height: 32px; border-bottom: 1.5px solid #879690; }
-.drill-paper { padding-inline: 42px; }
-.drill-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.drill-paper { padding-inline: 36px; }
+.drill-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .drill-question { position: relative; min-height: 150px; padding: 12px 12px 10px 34px; border: 1px solid #c9d2ce; border-radius: 8px; background: white; break-inside: avoid; }
 .drill-number { position: absolute; top: 10px; left: 10px; color: #61716c; font-size: 11px; font-weight: bold; }
 .drill-question .column-subtraction { width: 130px; margin: 0 auto; padding: 4px 12px 6px; border: 0; border-radius: 0; background: transparent; font-size: 22px; }
@@ -239,13 +239,17 @@ footer strong { color: white; font-family: Georgia, serif; font-size: 15px; }
   .question { margin-bottom: 7mm; padding: 6mm; }
   .working-lines { height: 25mm; }
   .working-area.large .working-lines { height: 38mm; }
-  .drill-paper .sheet-title { margin-top: 10mm; font-size: 24pt; }
-  .drill-paper .sheet-subtitle { margin-bottom: 8mm; }
-  .drill-paper .student-details { margin-bottom: 6mm; }
-  .drill-paper .sheet-instructions { margin-bottom: 8mm; padding: 0; border: 0; background: transparent; }
-  .drill-grid { gap: 5mm; grid-template-columns: repeat(2, 1fr); }
-  .drill-question { min-height: 39mm; padding: 4mm 4mm 3mm 10mm; border-color: #999; border-radius: 0; }
-  .drill-number { top: 4mm; left: 4mm; }
-  .drill-question .column-subtraction { width: 34mm; font-size: 18pt; }
-  .drill-question .column-subtraction i { height: 12mm; }
+  .drill-paper .sheet-topline { padding-bottom: 3mm; border-bottom-width: 1px; }
+  .drill-paper .sheet-brand { font-size: 13pt; }
+  .drill-paper .sheet-level { padding: 3px 5px; font-size: 6pt; }
+  .drill-paper .sheet-title { margin: 5mm 0 2mm; font-size: 20pt; }
+  .drill-paper .sheet-subtitle { margin-bottom: 4mm; font-size: 7pt; }
+  .drill-paper .student-details { grid-template-columns: 1fr 1fr; gap: 12mm; margin-bottom: 3mm; }
+  .drill-paper .student-details span { padding-bottom: 2mm; font-size: 8pt; }
+  .drill-paper .sheet-instructions { margin-bottom: 4mm; padding: 0; border: 0; background: transparent; font-size: 8pt; line-height: 1.25; }
+  .drill-grid { gap: 3mm; grid-template-columns: repeat(5, 1fr); }
+  .drill-question { min-height: 37mm; padding: 3mm 2mm 2mm 6mm; border-color: #999; border-radius: 0; }
+  .drill-number { top: 2mm; left: 2mm; font-size: 8pt; }
+  .drill-question .column-subtraction { width: 26mm; font-size: 13pt; }
+  .drill-question .column-subtraction i { height: 12mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 3.8mm, #e4e9e6 4mm); }
 }
