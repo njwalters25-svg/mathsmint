@@ -843,6 +843,17 @@ function updateTopicAvailability() {
   if (els.topic.selectedOptions[0]?.disabled) els.topic.value = "mixed";
 }
 
+function selectedTopicIsDrill() {
+  return isGroupMixedKey(els.topic.value)
+    ? groupFromMixedKey(els.topic.value) === "Drills"
+    : topics[els.topic.value]?.group === "Drills";
+}
+
+function setQuestionCount(total) {
+  els.count.value = String(total);
+  els.countOutput.value = String(total);
+}
+
 function generate() {
   state.topicKey = els.topic.value;
   state.difficulty = document.querySelector("input[name=difficulty]:checked").value;
@@ -919,6 +930,9 @@ function printSheet(type) {
 
 els.form.addEventListener("submit", event => { event.preventDefault(); generate(); });
 els.count.addEventListener("input", () => els.countOutput.value = els.count.value);
+els.topic.addEventListener("change", () => {
+  if (selectedTopicIsDrill()) setQuestionCount(15);
+});
 els.includeAnswers.addEventListener("change", render);
 els.calculatorModes.forEach(input => input.addEventListener("change", updateTopicAvailability));
 document.querySelectorAll(".view-tabs button").forEach(button => button.addEventListener("click", () => {
