@@ -239,17 +239,17 @@ footer strong { color: white; font-family: Georgia, serif; font-size: 15px; }
   .question { margin-bottom: 7mm; padding: 6mm; }
   .working-lines { height: 25mm; }
   .working-area.large .working-lines { height: 38mm; }
-  .drill-paper .sheet-topline { padding-bottom: 3mm; border-bottom-width: 1px; }
-  .drill-paper .sheet-brand { font-size: 13pt; }
+  .drill-paper .sheet-topline { padding-bottom: 2mm; border-bottom-width: 1px; }
+  .drill-paper .sheet-brand { font-size: 12pt; }
   .drill-paper .sheet-level { padding: 3px 5px; font-size: 6pt; }
-  .drill-paper .sheet-title { margin: 5mm 0 2mm; font-size: 20pt; }
-  .drill-paper .sheet-subtitle { margin-bottom: 4mm; font-size: 7pt; }
-  .drill-paper .student-details { grid-template-columns: 1fr 1fr; gap: 12mm; margin-bottom: 3mm; }
-  .drill-paper .student-details span { padding-bottom: 2mm; font-size: 8pt; }
-  .drill-paper .sheet-instructions { margin-bottom: 4mm; padding: 0; border: 0; background: transparent; font-size: 8pt; line-height: 1.25; }
-  .drill-grid { gap: 4mm; grid-template-columns: repeat(3, 1fr); }
-  .drill-question { min-height: 36mm; padding: 4mm 3mm 3mm 8mm; border-color: #999; border-radius: 0; }
-  .drill-number { top: 3mm; left: 3mm; font-size: 8pt; }
-  .drill-question .column-subtraction { width: 34mm; font-size: 18pt; }
-  .drill-question .column-subtraction i { height: 13mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 4.3mm, #e4e9e6 4.5mm); }
+  .drill-paper .sheet-title { margin: 3mm 0 1mm; font-size: 16pt; }
+  .drill-paper .sheet-subtitle { margin-bottom: 2mm; font-size: 6pt; }
+  .drill-paper .student-details { grid-template-columns: 1fr 1fr; gap: 12mm; margin-bottom: 2mm; }
+  .drill-paper .student-details span { padding-bottom: 1.5mm; font-size: 7pt; }
+  .drill-paper .sheet-instructions { margin-bottom: 3mm; padding: 0; border: 0; background: transparent; font-size: 7pt; line-height: 1.15; }
+  .drill-grid { gap: 3mm; grid-template-columns: repeat(3, 1fr); }
+  .drill-question { min-height: 31mm; padding: 3mm 3mm 2mm 7mm; border-color: #999; border-radius: 0; }
+  .drill-number { top: 2mm; left: 2.5mm; font-size: 7pt; }
+  .drill-question .column-subtraction { width: 32mm; padding: 1mm 2mm 1mm; font-size: 16pt; line-height: 1.15; }
+  .drill-question .column-subtraction i { height: 8mm; background: repeating-linear-gradient(to bottom, transparent 0, transparent 3.8mm, #e4e9e6 4mm); }
 }
