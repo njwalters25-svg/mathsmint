@@ -113,6 +113,19 @@ const twoWayTableScenarios = [
   ["A holiday park records {total} bookings over a season.", "Bookings", ["Cabins", "Caravans"], ["With pets", "Without pets"]]
 ];
 
+const discountOfferScenarios = [
+  ["wants to hire a campervan for a holiday", "Company", " per week", 480, 1040],
+  ["is booking a hall for a birthday party", "Venue", "", 160, 440],
+  ["is buying a Christmas hamper as a gift", "Shop", "", 20, 80],
+  ["needs a new bike for travelling to work", "Shop", "", 140, 480],
+  ["is booking a hotel room for a city break", "Hotel", " per night", 80, 220],
+  ["is buying a pair of trainers for a charity walk", "Shop", "", 40, 120],
+  ["is hiring a carpet cleaner", "Company", " per day", 40, 100],
+  ["is buying a desk for a home office", "Shop", "", 80, 280],
+  ["wants an annual pass to a local leisure centre", "Centre", " per year", 120, 360],
+  ["is ordering a tiered cake for a wedding", "Bakery", "", 120, 380]
+];
+
 function twoWayTable(headings, labels, values) {
   return `<table class="data-table two-way-table"><thead><tr>${headings.map(label => `<th scope="col">${label}</th>`).join("")}</tr></thead><tbody>${values.map((row, i) => `<tr><th scope="row">${labels[i]}</th>${row.map(value => value === null ? '<td class="blank-cell"></td>' : `<td>${value}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
@@ -354,6 +367,43 @@ const topics = {
     const discount = pick([10, 15, 20, 25, 30]), price = randInt(2, [10, 25, 60][difficultyScale[d] - 1]) * 20, saving = price * discount / 100, sale = price - saving;
     const item = styleAt(["jacket", "bicycle", "laptop", "sofa", "train ticket", "holiday suitcase", "Christmas hamper", "party dress", "garden table", "concert ticket"], index);
     return question(`A ${item} costs ${money(price)}. It is reduced by ${discount}%. What is the sale price?`, money(sale), `${discount}% of ${money(price)} = ${money(saving)}. ${money(price)} − ${money(saving)} = ${money(sale)}.`, { styleId: `discount-${index % 10}` });
+  }},
+  discountOffers: { group: "Percentages", label: "Comparing discount offers", make: (d, index = 0) => {
+    const [scenario, seller, unit, min, max] = styleAt(discountOfferScenarios, index);
+    const name = nameAt(index, 8);
+    const hard = d === "Hard";
+    const rates = { Easy: [5, 10, 20, 25], Medium: [5, 10, 15, 20, 25, 30], Hard: [8, 12, 15, 18, 22, 25] }[d];
+    const priceStep = { Easy: 2000, Medium: 500, Hard: 25 }[d];
+    const labels = [`${seller} A`, `${seller} B`];
+    const pounds = pence => money(pence / 100);
+    let prices, discounts, savings, salePrices;
+    do {
+      prices = labels.map(() => randStep(min * 100, max * 100, priceStep));
+      const rate = pick(rates);
+      discounts = [rate, pick(rates.filter(value => value !== rate))];
+      savings = prices.map((price, i) => Math.round(price * discounts[i] / 100));
+      salePrices = prices.map((price, i) => price - savings[i]);
+    } while (prices[0] === prices[1] || savings[0] === savings[1] || salePrices[0] === salePrices[1]);
+    const biggerSaving = savings[0] > savings[1] ? 0 : 1;
+    const lowerPrice = salePrices[0] < salePrices[1] ? 0 : 1;
+    const difference = Math.abs(salePrices[0] - salePrices[1]);
+    const savingQuestion = "Which offer gives more money off? Show how you decide.";
+    const savingSteps = labels.map((label, i) => `${label}: ${discounts[i]}% of ${pounds(prices[i])} = ${pounds(savings[i])} off.`);
+    const savingAnswer = `${labels[biggerSaving]} gives more money off.`;
+    const priceAnswer = `${labels[lowerPrice]} costs ${pounds(difference)} less after the discount.`;
+    const priceSteps = labels.map((label, i) => `${label}: ${pounds(prices[i])} − ${pounds(savings[i])} = ${pounds(salePrices[i])}.`);
+    return question(
+      `${name} ${scenario}. They find these two deals.`,
+      hard ? `a) ${savingAnswer} b) ${priceAnswer}` : savingAnswer,
+      [...savingSteps, savingAnswer, ...(hard ? [...priceSteps, `${pounds(Math.max(...salePrices))} − ${pounds(Math.min(...salePrices))} = ${pounds(difference)}. ${priceAnswer}`] : [])].join("\n"),
+      {
+        marks: hard ? 5 : 2, responseSize: hard ? "large" : "medium", boxedWorking: true,
+        personName: name, styleId: `discount-offers-${index % discountOfferScenarios.length}`,
+        visual: `<div class="comparison-layout discount-offers">${labels.map((label, i) => `<div class="quote-card"><strong>${label}</strong><span>${pounds(prices[i])}${unit}</span><span class="offer-discount">${discounts[i]}% off</span></div>`).join("")}</div>`,
+        followUp: hard ? "Round each discount to the nearest penny before comparing." : savingQuestion,
+        ...(hard ? { parts: [`a) ${savingQuestion}`, "b) Which offer costs less after the discount, and by how much?"] } : {})
+      }
+    );
   }},
   simplifyRatio: { group: "Ratio & proportion", label: "Simplifying ratios", make: (d, index = 0) => {
     const a = randInt(1, [6, 10, 15][difficultyScale[d] - 1]), b = randInt(1, [6, 10, 15][difficultyScale[d] - 1]), factor = randInt(2, 8);
@@ -792,15 +842,15 @@ const noCalculatorKeys = new Set([
   "threeDigitSubtractionRegrouping",
   "fiveDigitSubtractionRegrouping",
   "addition", "subtraction", "multiplication", "division", "negatives", "rounding", "orderOperations", "wordToFigures",
-  "simplifyFractions", "fractionAmount", "compareFractions", "orderDecimals", "percentages",
+  "simplifyFractions", "fractionAmount", "compareFractions", "orderDecimals", "percentages", "discountOffers",
   "simplifyRatio", "sharingRatio", "subscriptionCompare", "simpleInterest", "time", "cookingFormula", "conversions", "perimeter", "area", "angles",
   "averages", "probability", "probabilityScale", "fractionConversionTable", "salesTable", "reviewSummaryTable", "ratioPercentageTable", "meanRangeCompare", "probabilityParts"
 ]);
 const calculatorKeys = new Set([
-  "decimalCalculations", "increase", "discounts", "shopping", "budgets", "bestBuys", "profit", "sharedBillCheck",
+  "decimalCalculations", "increase", "discounts", "discountOffers", "shopping", "budgets", "bestBuys", "profit", "sharedBillCheck",
   "volume", "mixedWeights", "compareServices", "journeyFormula", "proportionReliability", "ratioPercentageTable"
 ]);
-const variedFormatKeys = ["fractionConversionTable", "salesTable", "reviewSummaryTable", "ratioPercentageTable", "meanRangeCompare", "mixedWeights", "compareServices", "subscriptionCompare", "sharedBillCheck", "simpleInterest", "journeyFormula", "cookingFormula", "probabilityParts", "probabilityScale", "proportionReliability", "orderOperations", "wordToFigures"];
+const variedFormatKeys = ["fractionConversionTable", "salesTable", "reviewSummaryTable", "ratioPercentageTable", "meanRangeCompare", "mixedWeights", "compareServices", "subscriptionCompare", "sharedBillCheck", "simpleInterest", "journeyFormula", "cookingFormula", "probabilityParts", "probabilityScale", "proportionReliability", "orderOperations", "wordToFigures", "discountOffers"];
 const groupMixedPrefix = "mixed-group:";
 
 const state = { questions: [], topicKey: "mixed", difficulty: "Medium", calculatorMode: "Mixed", view: "worksheet" };
@@ -940,14 +990,18 @@ function generate() {
   state.difficulty = document.querySelector("input[name=difficulty]:checked").value;
   state.calculatorMode = document.querySelector("input[name=calculator-mode]:checked").value;
   const total = Number(els.count.value);
-  let tableScenario = randInt(0, twoWayTableScenarios.length - 1);
-  const tablePrompts = new Set();
+  const scenarioIndexes = {
+    ratioPercentageTable: randInt(0, twoWayTableScenarios.length - 1),
+    discountOffers: randInt(0, discountOfferScenarios.length - 1)
+  };
+  const seenPrompts = new Set();
   const build = (key, index) => {
-    if (key !== "ratioPercentageTable") return makeQuestion(key, index);
-    const scenario = tableScenario++;
+    if (!Object.hasOwn(scenarioIndexes, key)) return makeQuestion(key, index);
+    const scenario = scenarioIndexes[key]++;
+    const signature = item => `${key}\n${item.text}\n${item.visual}`;
     let item = makeQuestion(key, index, scenario);
-    while (tablePrompts.has(item.text)) item = makeQuestion(key, index, scenario);
-    tablePrompts.add(item.text);
+    while (seenPrompts.has(signature(item))) item = makeQuestion(key, index, scenario);
+    seenPrompts.add(signature(item));
     return item;
   };
   if (state.topicKey === "mixed" || isGroupMixedKey(state.topicKey)) {
@@ -988,7 +1042,10 @@ function sheetHeader(answerSheet = false) {
 }
 
 function questionBody(q) {
-  return `${q.visual ? formatText(q.visual) : ""}${q.parts ? `<div class="question-parts">${q.parts.map(part => `<p>${formatText(part)}</p>`).join("")}</div>` : ""}`;
+  const visual = q.visual ? formatText(q.visual) : "";
+  const followUp = q.followUp ? `<p class="question-follow-up">${formatText(q.followUp)}</p>` : "";
+  const parts = q.parts ? `<div class="question-parts">${q.parts.map(part => `<p>${formatText(part)}</p>`).join("")}</div>` : "";
+  return visual + followUp + parts;
 }
 
 function answerLines(q) {
@@ -1003,6 +1060,11 @@ function answerBody(q) {
     : `${questionBody(q)}<p class="answer"><strong>Answer</strong>${formatText(q.answer)}</p>`;
 }
 
+function workingArea(q) {
+  const boxed = q.answerVisual || q.boxedWorking;
+  return `<div class="working-area ${q.responseSize}${boxed ? " boxed-working" : ""}"><span>${q.answerVisual ? "Show your working" : "Show your working and answer"}</span><div class="working-lines"></div>${answerLines(q)}</div>`;
+}
+
 function render() {
   const answers = state.view === "answers";
   const drillSheet = state.questions.length && state.questions.every(question => question.topicGroup === "Drills");
@@ -1014,7 +1076,7 @@ function render() {
       : state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${formatText(q.text)}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${answerBody(q)}<p class="solution"><strong>How to work it out</strong>${formatText(q.solution)}</p></section>`).join("")
     : drillSheet
       ? `<div class="drill-grid">${state.questions.map((q, i) => `<section class="drill-question"><span class="drill-number">${i + 1}</span>${questionBody(q)}</section>`).join("")}</div>`
-      : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}${q.answerVisual ? " table-working" : ""}"><span>${q.answerVisual ? "Show your working" : "Show your working and answer"}</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
+      : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}${workingArea(q)}</section>`).join(""));
   els.detail.textContent = `${state.questions.length} questions · ${state.questions.reduce((sum, item) => sum + item.marks, 0)} marks · ${state.calculatorMode} · ${state.difficulty}`;
   els.printAnswers.hidden = !els.includeAnswers.checked;
 }
