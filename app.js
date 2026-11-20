@@ -100,6 +100,23 @@ function spinnerVisual(values) {
   return `<div class="spinner-visual" aria-label="Spinner with ten equal sections labelled ${values.join(", ")}"><svg viewBox="0 0 200 200" role="img">${sectors}<circle cx="100" cy="100" r="8" class="spinner-pin"></circle><path d="M100 100 L100 35 L94 48 M100 35 L106 48" class="spinner-arrow"></path></svg></div>`;
 }
 
+const twoWayTableScenarios = [
+  ["At a Christmas market, {total} gifts are sold.", "Gifts", ["Candles", "Soaps"], ["Gift-wrapped", "Not gift-wrapped"]],
+  ["A theatre sells {total} tickets for a holiday show.", "Tickets", ["Adult", "Child"], ["Online", "At the box office"]],
+  ["A bakery prepares {total} cupcakes across two flavours.", "Cupcakes", ["Chocolate", "Lemon"], ["With sprinkles", "Without sprinkles"]],
+  ["A museum records {total} visitors across the weekend.", "Visitors", ["Saturday", "Sunday"], ["Guided tour", "No guided tour"]],
+  ["A garden centre receives {total} new plants.", "Plants", ["Lavender", "Rosemary"], ["Small pot", "Large pot"]],
+  ["A sports shop has {total} pairs of trainers in stock.", "Pairs of trainers", ["Adults' sizes", "Children's sizes"], ["Black", "White"]],
+  ["A library service lends out {total} books during a reading challenge.", "Books", ["Fiction", "Non-fiction"], ["Paperback", "Hardback"]],
+  ["A catering company takes orders for {total} lunches for a festival.", "Lunches", ["Wraps", "Salads"], ["Collection", "Delivery"]],
+  ["A print shop produces {total} invitations for parties.", "Invitations", ["Birthdays", "Anniversaries"], ["Matte", "Gloss"]],
+  ["A holiday park records {total} bookings over a season.", "Bookings", ["Cabins", "Caravans"], ["With pets", "Without pets"]]
+];
+
+function twoWayTable(headings, labels, values) {
+  return `<table class="data-table two-way-table"><thead><tr>${headings.map(label => `<th scope="col">${label}</th>`).join("")}</tr></thead><tbody>${values.map((row, i) => `<tr><th scope="row">${labels[i]}</th>${row.map(value => value === null ? '<td class="blank-cell"></td>' : `<td>${value}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+}
+
 const topics = {
   threeDigitSubtractionRegrouping: { group: "Drills", label: "3-digit subtraction with borrowing", make: (d, index = 0) => {
     let minuend = randInt(200, 999);
@@ -607,6 +624,53 @@ const topics = {
       visual: `<table class="data-table"><thead><tr><th>Rating</th><th>Score</th><th>Percentage</th></tr></thead><tbody><tr><td>Excellent</td><td class="blank-cell"></td><td>${excellentPct}%</td></tr><tr><td>Good</td><td>${good}</td><td class="blank-cell"></td></tr><tr><td>Average</td><td class="blank-cell"></td><td class="blank-cell"></td></tr></tbody></table>`
     });
   }},
+  ratioPercentageTable: { group: "Statistics", label: "Two-way tables: ratio and percentages", make: (d, index = 0) => {
+    const [intro, unit, rows, columns] = styleAt(twoWayTableScenarios, index);
+    const ratios = { Easy: [[2, 1], [3, 1], [1, 4]], Medium: [[2, 3], [3, 2], [4, 1], [5, 3]], Hard: [[3, 4], [4, 3], [5, 3], [5, 4], [7, 2]] };
+    const percentages = { Easy: [10, 20, 50], Medium: [5, 15, 25, 30, 40, 75], Hard: [12, 16, 18, 24, 28, 32, 36] };
+    const ratio = pick(ratios[d]);
+    const percent = pick(percentages[d]);
+    const percents = [percent, pick(percentages[d].filter(value => value !== percent))];
+    const givenColumn = [0, d === "Hard" || (d === "Medium" && randInt(0, 1)) ? 1 : 0];
+    // Choose a part size divisible by what each percentage calculation needs.
+    const step = ratio.reduce((multiple, parts, i) => {
+      const needed = 100 / gcd(100, parts * percents[i]);
+      return multiple * needed / gcd(multiple, needed);
+    }, d === "Easy" ? 10 : 1);
+    const part = step * randInt(Math.ceil(25 / step), Math.floor(250 / step));
+    const totals = ratio.map(parts => parts * part);
+    const total = totals[0] + totals[1];
+    const cells = totals.map((rowTotal, i) => {
+      const given = rowTotal * percents[i] / 100;
+      const other = rowTotal - given;
+      return givenColumn[i] === 0 ? [given, other, rowTotal] : [other, given, rowTotal];
+    });
+    const columnTotals = cells[0].map((value, i) => value + cells[1][i]);
+    const completed = [...cells, columnTotals];
+    const headings = [unit, ...columns, "Total"];
+    const labels = [...rows, "Total"];
+    const prompt = [
+      intro.replace("{total}", total),
+      `The ratio of the "${rows[0]}" group to the "${rows[1]}" group is ${ratio.join(" : ")}.`,
+      ...rows.map((row, i) => `In the "${row}" group, ${percents[i]}% are in the "${columns[givenColumn[i]]}" column. The rest are in "${columns[1 - givenColumn[i]]}".`),
+      "Complete the table.",
+      ...(d === "Easy" ? ["Start by finding the value of one part of the ratio."] : [])
+    ];
+    const solution = [
+      `There are ${ratio[0]} + ${ratio[1]} = ${ratio[0] + ratio[1]} parts. One part is ${total} ÷ ${ratio[0] + ratio[1]} = ${part}.`,
+      ...rows.map((row, i) => {
+        const col = givenColumn[i];
+        return `${row}: ${ratio[i]} × ${part} = ${totals[i]}. ${percents[i]}% of ${totals[i]} = ${cells[i][col]} (${columns[col]}). The rest: ${totals[i]} − ${cells[i][col]} = ${cells[i][1 - col]} (${columns[1 - col]}).`;
+      }),
+      `Add the columns: ${cells[0][0]} + ${cells[1][0]} = ${columnTotals[0]}; ${cells[0][1]} + ${cells[1][1]} = ${columnTotals[1]}. Together: ${columnTotals[0]} + ${columnTotals[1]} = ${total}.`
+    ];
+    return question(prompt.join("\n"), completed.map((row, i) => `${labels[i]}: ${row.join(", ")}`).join("; "), solution.join("\n"), {
+      marks: 5, responseSize: "large",
+      styleId: `ratio-percentage-table-${index % twoWayTableScenarios.length}`,
+      visual: twoWayTable(headings, labels, [[null, null, null], [null, null, null], [null, null, d === "Easy" ? total : null]]),
+      answerVisual: twoWayTable(headings, labels, completed)
+    });
+  }},
   meanRangeCompare: { group: "Statistics", label: "Mean and range comparison", make: (d, index = 0) => {
     const count = 7;
     const values = Array.from({ length: count }, () => randInt(10, [80, 180, 260][difficultyScale[d]-1])).sort((a,b)=>a-b);
@@ -730,13 +794,13 @@ const noCalculatorKeys = new Set([
   "addition", "subtraction", "multiplication", "division", "negatives", "rounding", "orderOperations", "wordToFigures",
   "simplifyFractions", "fractionAmount", "compareFractions", "orderDecimals", "percentages",
   "simplifyRatio", "sharingRatio", "subscriptionCompare", "simpleInterest", "time", "cookingFormula", "conversions", "perimeter", "area", "angles",
-  "averages", "probability", "probabilityScale", "fractionConversionTable", "salesTable", "reviewSummaryTable", "meanRangeCompare", "probabilityParts"
+  "averages", "probability", "probabilityScale", "fractionConversionTable", "salesTable", "reviewSummaryTable", "ratioPercentageTable", "meanRangeCompare", "probabilityParts"
 ]);
 const calculatorKeys = new Set([
   "decimalCalculations", "increase", "discounts", "shopping", "budgets", "bestBuys", "profit", "sharedBillCheck",
-  "volume", "mixedWeights", "compareServices", "journeyFormula", "proportionReliability"
+  "volume", "mixedWeights", "compareServices", "journeyFormula", "proportionReliability", "ratioPercentageTable"
 ]);
-const variedFormatKeys = ["fractionConversionTable", "salesTable", "reviewSummaryTable", "meanRangeCompare", "mixedWeights", "compareServices", "subscriptionCompare", "sharedBillCheck", "simpleInterest", "journeyFormula", "cookingFormula", "probabilityParts", "probabilityScale", "proportionReliability", "orderOperations", "wordToFigures"];
+const variedFormatKeys = ["fractionConversionTable", "salesTable", "reviewSummaryTable", "ratioPercentageTable", "meanRangeCompare", "mixedWeights", "compareServices", "subscriptionCompare", "sharedBillCheck", "simpleInterest", "journeyFormula", "cookingFormula", "probabilityParts", "probabilityScale", "proportionReliability", "orderOperations", "wordToFigures"];
 const groupMixedPrefix = "mixed-group:";
 
 const state = { questions: [], topicKey: "mixed", difficulty: "Medium", calculatorMode: "Mixed", view: "worksheet" };
@@ -783,10 +847,10 @@ function calculatorForQuestion(key, requestedMode, index = 0) {
   return index % 2 ? "Calculator" : "No calculator";
 }
 
-function makeQuestion(key, index = 0) {
+function makeQuestion(key, index = 0, styleIndex = index) {
   const calculatorMode = calculatorForQuestion(key, state.calculatorMode, index);
   return validateQuestion({
-    ...topics[key].make(effectiveDifficulty(state.difficulty, calculatorMode), index),
+    ...topics[key].make(effectiveDifficulty(state.difficulty, calculatorMode), styleIndex),
     topicLabel: topics[key].label,
     topicGroup: topics[key].group,
     calculatorMode
@@ -876,6 +940,16 @@ function generate() {
   state.difficulty = document.querySelector("input[name=difficulty]:checked").value;
   state.calculatorMode = document.querySelector("input[name=calculator-mode]:checked").value;
   const total = Number(els.count.value);
+  let tableScenario = randInt(0, twoWayTableScenarios.length - 1);
+  const tablePrompts = new Set();
+  const build = (key, index) => {
+    if (key !== "ratioPercentageTable") return makeQuestion(key, index);
+    const scenario = tableScenario++;
+    let item = makeQuestion(key, index, scenario);
+    while (tablePrompts.has(item.text)) item = makeQuestion(key, index, scenario);
+    tablePrompts.add(item.text);
+    return item;
+  };
   if (state.topicKey === "mixed" || isGroupMixedKey(state.topicKey)) {
     const selectedGroup = isGroupMixedKey(state.topicKey) ? groupFromMixedKey(state.topicKey) : null;
     const belongsToSelectedGroup = key => !selectedGroup || topics[key].group === selectedGroup;
@@ -890,11 +964,11 @@ function generate() {
       const useVariedFormat = index % 3 === 2 && eligibleVariedKeys.length;
       const [, keys] = groupBuckets[index % groupBuckets.length];
       const key = useVariedFormat ? eligibleVariedKeys[(variedFormatStart + Math.floor(index / 3)) % eligibleVariedKeys.length] : pick(keys);
-      return makeQuestion(key, index);
+      return build(key, index);
     });
     state.questions.sort(() => Math.random() - 0.5);
   } else {
-    state.questions = Array.from({ length: total }, (_, index) => makeQuestion(state.topicKey, index));
+    state.questions = Array.from({ length: total }, (_, index) => build(state.topicKey, index));
   }
   arrangeQuestionSequence(state.questions);
   validateQuestionSequence(state.questions);
@@ -918,8 +992,15 @@ function questionBody(q) {
 }
 
 function answerLines(q) {
+  if (q.answerVisual) return "";
   if (!q.parts?.length) return `<div class="answer-line">Answer</div>`;
   return `<div class="part-answer-lines">${q.parts.map((_, index) => `<div class="answer-line">Answer ${String.fromCharCode(97 + index)})</div>`).join("")}</div>`;
+}
+
+function answerBody(q) {
+  return q.answerVisual
+    ? `<p class="table-answer-label"><strong>Completed table</strong></p>${q.answerVisual}`
+    : `${questionBody(q)}<p class="answer"><strong>Answer</strong>${formatText(q.answer)}</p>`;
 }
 
 function render() {
@@ -930,10 +1011,10 @@ function render() {
   els.paper.innerHTML = sheetHeader(answers) + (answers
     ? drillSheet
       ? `<div class="drill-answer-grid">${state.questions.map((q, i) => `<div><strong>${i + 1}</strong><span>${formatText(q.answer)}</span></div>`).join("")}</div>`
-      : state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${formatText(q.text)}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<p class="answer"><strong>Answer</strong>${formatText(q.answer)}</p><p class="solution"><strong>How to work it out</strong>${formatText(q.solution)}</p></section>`).join("")
+      : state.questions.map((q, i) => `<section class="answer-card"><div class="answer-heading"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><h4>${formatText(q.text)}</h4></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${answerBody(q)}<p class="solution"><strong>How to work it out</strong>${formatText(q.solution)}</p></section>`).join("")
     : drillSheet
       ? `<div class="drill-grid">${state.questions.map((q, i) => `<section class="drill-question"><span class="drill-number">${i + 1}</span>${questionBody(q)}</section>`).join("")}</div>`
-      : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}"><span>Show your working and answer</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
+      : state.questions.map((q, i) => `<section class="question"><div class="question-row"><span class="question-number">${i + 1}</span><div><span class="question-topic">${q.topicLabel}</span><p>${formatText(q.text)}</p></div><div class="question-meta"><span class="calculator-tag ${q.calculatorMode === "No calculator" ? "no-calculator" : ""}">${q.calculatorMode}</span><span class="marks">${q.marks} marks</span></div></div>${questionBody(q)}<div class="working-area ${q.responseSize}${q.answerVisual ? " table-working" : ""}"><span>${q.answerVisual ? "Show your working" : "Show your working and answer"}</span><div class="working-lines"></div>${answerLines(q)}</div></section>`).join(""));
   els.detail.textContent = `${state.questions.length} questions · ${state.questions.reduce((sum, item) => sum + item.marks, 0)} marks · ${state.calculatorMode} · ${state.difficulty}`;
   els.printAnswers.hidden = !els.includeAnswers.checked;
 }
